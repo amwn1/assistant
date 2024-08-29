@@ -44,7 +44,7 @@ const NameGenPusher = () => {
     // Function to fetch content from the Vercel function
     const fetchContent = async () => {
       try {
-        const response = await fetch('https://voiceflow-namegenerator.vercel.app/api/pusher-event'); // Update with your actual server URL
+        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event'); // Update with your actual server URL
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
