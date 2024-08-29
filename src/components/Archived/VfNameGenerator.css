@@ -1,34 +1,36 @@
 /* Center everything in the body */
-body {
+.vf-container {
   background-color: black;
   color: white;
   font-family: 'Proxima Nova', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;  /* Changed from height: 100vh to min-height */
+  min-height: 100vh;
   margin: 0;
-  flex-direction: column; /* Allow content to stack vertically */
+  flex-direction: column;
 }
 
 /* Style the container */
-.vf-container {
+.vf-container .vf-inner-container {
   text-align: center;
   width: 100%;
   max-width: 600px;
-  margin: 20px auto; /* Added top and bottom margin */
-  padding: 20px; /* Added padding for better spacing */
-  flex-grow: 1; /* Allow the container to grow */
+  margin: 20px auto;
+  color: #000;
+  padding: 20px;
+  flex-grow: 1;
 }
 
 /* Style the heading */
-h2 {
+.vf-container h2 {
   font-size: 2em;
   margin-bottom: 20px;
+  text-transform: uppercase;
 }
 
 /* Style the text box */
-input[type="text"] {
+.vf-container input[type="text"] {
   width: 90%;
   padding: 10px;
   font-size: 1em;
@@ -41,7 +43,7 @@ input[type="text"] {
 }
 
 /* Style the button */
-button {
+.vf-container button {
   background-color: black;
   color: white;
   font-size: 1em;
@@ -53,7 +55,7 @@ button {
   transition: all 0.3s ease-in-out;
 }
 
-button:hover {
+.vf-container button:hover {
   background-color: white;
   color: black;
   border: 1px solid black;
@@ -61,17 +63,17 @@ button:hover {
 }
 
 /* Disabled button styling */
-button:disabled {
+.vf-container button:disabled {
   background-color: gray;
   color: white;
   cursor: not-allowed;
 }
 
 /* Style the response box */
-.response-box {
+.vf-container .vf-response-box {
   background-color: white;
   color: black;
-  padding: 20px; /* Added padding for better spacing */
+  padding: 20px;
   border-radius: 10px;
   margin-top: 20px;
   font-size: 1em;
@@ -81,13 +83,54 @@ button:disabled {
   margin-left: auto;
   margin-right: auto;
   transition: all 0.3s ease-in-out;
-  line-height: 2; /* Add space between lines */
-  max-height: 1000vh; /* Limit height to prevent overflowing */
-  overflow-y: auto; /* Make the box scrollable if content overflows */
+  line-height: 2;
+  max-height: 1000vh;
+  overflow-y: auto;
 }
 
-.response-box:hover {
+.vf-container .vf-response-box:hover {
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
   transform: scale(1.02);
   cursor: pointer;
+}
+
+/* Style the links inside the response box */
+.vf-container .vf-response-box a {
+  color: black !important;
+  font-weight: bold;
+  text-decoration: none !important;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
+/* Create the underline effect */
+.vf-container .vf-response-box a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: black;
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
+}
+
+/* Add hover effect for links */
+.vf-container .vf-response-box a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+  transition: transform 0.2s ease-in;
+}
+
+/* On mouse-out, faster ease-out */
+.vf-container .vf-response-box a::after {
+  transition: transform 0.1s ease-out;
+}
+
+/* Make headings in the response box uppercase */
+.vf-container .vf-response-box h3 {
+  text-transform: uppercase;
 }

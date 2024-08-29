@@ -1,43 +1,8 @@
-// import React, { useEffect, useState } from 'react';
-// import Pusher from 'pusher-js';
-
-// const NameGenPusher = () => {
-//   const [name, setName] = useState('');
-
-//   useEffect(() => {
-//     // Initialize Pusher
-//     const pusher = new Pusher('b3e4cdb43addf0483109', {
-//       cluster: 'ap2'
-//     });
-
-//     // Subscribe to the channel and event
-//     const channel = pusher.subscribe('name-channel');
-//     channel.bind('name-generated', function (data) {
-//       setName(data.name); // Set the incoming name data to state
-//     });
-
-//     // Clean up on component unmount
-//     return () => {
-//       channel.unbind('name-generated');
-//       pusher.unsubscribe('name-channel');
-//     };
-//   }, []);
-
-//   return (
-//     <div>
-//       <h2>Real-Time Name Generator</h2>
-//       <p>Generated Name: {name}</p>
-//     </div>
-//   );
-// };
-
-// export default NameGenPusher;
-
 import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
 
 const NameGenPusher = () => {
-  const [content, setContent] = useState(''); // State to hold content as HTML
+  const [content, setContent] = useState(''); // State to hold the generated content
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -49,9 +14,8 @@ const NameGenPusher = () => {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
         const data = await response.json(); // Fetch response as JSON
-        const markdownContent = data.message; // Extract message from JSON
-        const htmlContent = convertMarkdownToHTML(markdownContent); // Convert markdown to HTML
-        setContent(htmlContent); // Set the converted HTML content to state
+        const htmlContent = parseContent(data.message); // Parse the markdown content
+        setContent(htmlContent); // Set the generated HTML content to state
       } catch (error) {
         console.error('Error fetching content:', error);
         setError('Describe your Business to the Chatbot');
@@ -70,17 +34,20 @@ const NameGenPusher = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Function to convert markdown to HTML
-  const convertMarkdownToHTML = (markdown) => {
+  // Function to parse the markdown content into HTML
+  const parseContent = (markdown) => {
+    if (!markdown) return '<p>No names generated</p>';
+
+    // Replace markdown headings and links with HTML equivalents
     return markdown
-      .replace(/### (.*?)\n/g, '<h3>$1</h3>') // Convert markdown headers
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>') // Convert markdown links
-      .replace(/\n/g, '<br>'); // Convert newlines to <br>
+      .replace(/### (.*?)(?=\s*-)/g, '<h3>$1</h3>') // Convert headings
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>') // Convert links
+      .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
   };
 
   return (
     <div className="vf-container">
-      <h2>Generated Name</h2>
+      <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       {/* Render the dynamic HTML content */}
       <div className="response-box" dangerouslySetInnerHTML={{ __html: content }} />
@@ -89,6 +56,3 @@ const NameGenPusher = () => {
 };
 
 export default NameGenPusher;
-
-
-
