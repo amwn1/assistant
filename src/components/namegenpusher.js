@@ -38,12 +38,14 @@ const NameGenPusher = () => {
   const parseContent = (markdown) => {
     if (!markdown) return '<p>No names generated</p>';
 
+    // Replace markdown headings and links with HTML equivalents
     return markdown
       .replace(/### (.*?)(?=\s*-)/g, '<h3>$1</h3>') // Convert headings
-      .replace(/\[(.*?)\]\((.*?)\)/g, (_, name) => {
-        const encodedName = encodeURIComponent(name.trim().replace(/ /g, '+'));
+      .replace(/- \[([^\]]+)\]\(([^)]+)\)/g, (_, name, url) => {
+        // Correctly encode the URL and name
+        const encodedName = encodeURIComponent(name.trim());
         return `<a href="https://www.godaddy.com/en-in/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a>`;
-      }) // Convert names to GoDaddy search links
+      }) // Convert markdown links to HTML links
       .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
   };
 
