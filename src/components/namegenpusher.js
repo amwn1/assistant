@@ -31,7 +31,7 @@ const NameGenPusher = () => {
     // Function to fetch content from the Vercel function
     const fetchContent = async () => {
       try {
-        const response = await fetch('https://assistant-weld.vercel.app/'); // Use your Vercel endpoint
+        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event'); // Use your Vercel endpoint
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
