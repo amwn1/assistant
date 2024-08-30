@@ -58,4 +58,4 @@ const NameGenPusher = () => {
   );
 };
 
-export default NameGenPusher;
+export default NameGenPusher;   //export the component
