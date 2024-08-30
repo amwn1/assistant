@@ -40,16 +40,13 @@ const NameGenPusher = () => {
 
     // Replace markdown headings and links with HTML equivalents
     return markdown
-      .replace(/### (.*?)(?=\s*-|$)/g, '<h3>$1</h3>') // Convert headings
+      .replace(/### (.*?)(?=\s*-)/g, '<h3>$1</h3>') // Convert headings
       .replace(/- \[([^\]]+)\]\(([^)]+)\)/g, (_, name, url) => {
         // Correctly encode the URL and name
         const encodedName = encodeURIComponent(name.trim());
-        return `<li><a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a></li>`;
+        return `<a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a>`;
       }) // Convert markdown links to HTML links
-      .replace(/###\s*/g, '</ul><h3>') // Close previous list before new heading
-      .replace(/\n/g, '<br>') // Convert newlines to line breaks
-      .replace(/<br>\s*<li>/g, '<li>') // Handle line breaks between list items
-      .replace(/<\/li>\s*<br>/g, '</li>'); // Handle line breaks after list items
+      .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
   };
 
   return (
