@@ -1,4 +1,3 @@
-/* Center everything in the body /
 body {
   background-color: black;
   color: white;
@@ -11,7 +10,6 @@ body {
   flex-direction: column;
 }
 
-/ Style the container /
 .vf-container {
   text-align: center;
   width: 100%;
@@ -21,14 +19,12 @@ body {
   flex-grow: 1;
 }
 
-/ Style the heading /
 h2 {
   font-size: 2em;
   margin-bottom: 20px;
   text-transform: uppercase;
 }
 
-/ Style the response box /
 .response-box {
   background-color: white;
   color: black;
@@ -53,7 +49,6 @@ h2 {
   cursor: pointer;
 }
 
-/ Style the links inside the response box */
 .response-box a {
   color: black !important;
   font-weight: bold;
@@ -62,7 +57,7 @@ h2 {
   display: inline-block;
   padding-bottom: 2px;
 }
-/* Create the underline effect /
+
 .response-box a::after {
   content: '';
   position: absolute;
@@ -76,19 +71,16 @@ h2 {
   transition: transform 0.3s ease-out;
 }
 
-/ Add hover effect for links /
 .response-box a:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
-  transition: transform 0.2s ease-in; / Faster transition on hover-in /
+  transition: transform 0.2s ease-in;
 }
 
-/ On mouse-out, faster ease-out /
 .response-box a::after {
-  transition: transform 0.1s ease-out; / Faster transition on hover-out /
+  transition: transform 0.1s ease-out;
 }
 
-/ Make headings in the response box uppercase */
 .response-box h3 {
   text-transform: uppercase;
   color: black;
