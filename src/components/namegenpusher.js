@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './namegenpusher.css';
 // Function to check domain availability using GoDaddy API
 const checkDomainAvailability = async (domain) => {
-  const apiKey = 'your-godaddy-api-key'; // Replace with your GoDaddy API key
-  const apiSecret = 'your-godaddy-api-secret'; // Replace with your GoDaddy API secret
+  const apiKey = '3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa'; // Replace with your GoDaddy API key
+  const apiSecret = '3MLCLyegkYhPjTkUa48qM2'; // Replace with your GoDaddy API secret
 
   try {
     const response = await fetch(`https://api.godaddy.com/v1/domains/available?domain=${domain}`, {
@@ -31,7 +31,7 @@ const NameGenPusher = () => {
     // Function to fetch content from the Vercel function
     const fetchContent = async () => {
       try {
-        const response = await fetch('https://voiceflow-namegenerator.vercel.app/api/pusher-event'); // Use your Vercel endpoint
+        const response = await fetch('https://assistant-weld.vercel.app/'); // Use your Vercel endpoint
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
