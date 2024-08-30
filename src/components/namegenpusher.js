@@ -24,7 +24,8 @@ const NameGenPusher = () => {
 
     // Initial fetch
     fetchContent();
-// Set up polling every 5 seconds
+
+    // Set up polling every 5 seconds
     const intervalId = setInterval(() => {
       fetchContent();
     }, 5000);
@@ -39,13 +40,13 @@ const NameGenPusher = () => {
 
     // Replace markdown headings and links with HTML equivalents
     return markdown
-      .replace(/### (.?)(?=\s-)/g, '<h3>$1</h3>') // Convert headings
-      .replace(/- [([^]]+)](([^)]+))/g, (_, name, url) => {
+      .replace(/### (.*?)(?=\s*-)/g, '<h3>$1</h3>') // Convert headings
+      .replace(/- \[([^\]]+)\]\(([^)]+)\)/g, (_, name, url) => {
         // Correctly encode the URL and name
         const encodedName = encodeURIComponent(name.trim());
-        return <a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a>;
+        return `<a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a>`;
       }) // Convert markdown links to HTML links
-      .replace(/\s-\s/g, '<br>'); // Convert bullet points to line breaks
+      .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
   };
 
   return (
@@ -58,4 +59,4 @@ const NameGenPusher = () => {
   );
 };
 
-export default NameGenPusher;   //export the component
+export default NameGenPusher;
