@@ -81,7 +81,12 @@ h2 {
 .response-box a:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
-  transition: transform 0.2s ease-in;
+  transition: transform 0.2s ease-in; /* Faster transition on hover-in */
+}
+
+/* On mouse-out, faster ease-out */
+.response-box a::after {
+  transition: transform 0.1s ease-out; /* Faster transition on hover-out */
 }
 
 /* Make headings in the response box uppercase */
@@ -93,12 +98,7 @@ h2 {
   margin-bottom: 10px;
 }
 
-/* List styles */
-.response-box ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.response-box li {
-  margin: 5px 0;
+/* Add styles to underline available domains */
+.response-box a.underline {
+  text-decoration: underline;
 }
