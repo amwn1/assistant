@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
+import './namegenpusher.css';
 // GoDaddy API credentials (Replace these with your actual credentials)
 const GODADDY_API_KEY = '3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa';
 const GODADDY_API_SECRET = '3MLCLyegkYhPjTkUa48qM2';
