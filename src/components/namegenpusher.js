@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './namegenpusher.css';
 
 const NameGenPusher = () => {
   const [content, setContent] = useState(''); // State to hold content as HTML
