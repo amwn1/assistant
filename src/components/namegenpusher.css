@@ -97,3 +97,8 @@ h2 {
   margin-top: 20px;
   margin-bottom: 10px;
 }
+
+/* Add styles to underline available domains */
+.response-box a.underline {
+  text-decoration: underline;
+}
