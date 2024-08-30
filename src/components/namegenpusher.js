@@ -44,10 +44,9 @@ const NameGenPusher = () => {
       .replace(/- \[([^\]]+)\]\(([^)]+)\)/g, (_, name, url) => {
         // Correctly encode the URL and name
         const encodedName = encodeURIComponent(name.trim());
-        return `<li><a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a></li>`;
+        return `<a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a>`;
       }) // Convert markdown links to HTML links
-      .replace(/\n/g, '<br>') // Convert newlines to line breaks
-      .replace(/<\/li>\s*<li>/g, '</li><li>'); // Handle newlines between list items
+      .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
   };
 
   return (
