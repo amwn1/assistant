@@ -14,7 +14,7 @@ const NameGenPusher = () => {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
         const data = await response.json(); // Fetch response as JSON
-        const htmlContent = parseContent(data.message); // Parse the markdown content
+        const htmlContent = await parseContent(data.message); // Parse the markdown content
         setContent(htmlContent); // Set the generated HTML content to state
       } catch (error) {
         console.error('Error fetching content:', error);
@@ -34,18 +34,47 @@ const NameGenPusher = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Function to check domain availability
+  const checkDomainAvailability = async (domain) => {
+    try {
+      const response = await fetch(`/api/check-domain?domain=${encodeURIComponent(domain)}`);
+      const result = await response.json();
+      return result.available;
+    } catch (error) {
+      console.error('Error checking domain availability:', error);
+      return false;
+    }
+  };
+
   // Function to parse the markdown content into HTML
-  const parseContent = (markdown) => {
+  const parseContent = async (markdown) => {
     if (!markdown) return '<p>No names generated</p>';
 
-    // Replace markdown headings and links with HTML equivalents
+    const linkRegex = /- \[([^\]]+)\]\(([^)]+)\)/g;
+    let match;
+    const promises = [];
+
+    while ((match = linkRegex.exec(markdown)) !== null) {
+      const name = match[1];
+      const url = match[2];
+      const encodedName = encodeURIComponent(name.trim());
+
+      promises.push(
+        checkDomainAvailability(encodedName).then(isAvailable => {
+          const availabilityClass = isAvailable ? 'available' : 'unavailable';
+          return `<a href="https://www.godaddy.com/en-in/domainsearch/find?domainToCheck=${encodedName}" class="${availabilityClass}" target="_blank">${name}</a>`;
+        })
+      );
+    }
+
+    const links = await Promise.all(promises);
+    let index = 0;
+
     return markdown
       .replace(/### (.*?)(?=\s*-)/g, '<h3>$1</h3>') // Convert headings
-      .replace(/- \[([^\]]+)\]\(([^)]+)\)/g, (_, name, url) => {
-        // Correctly encode the URL and name
-        const encodedName = encodeURIComponent(name.trim());
-        return `<a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank">${name}</a>`;
-      }) // Convert markdown links to HTML links
+      .replace(linkRegex, () => {
+        return links[index++];
+      }) // Insert links with availability check
       .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
   };
 
