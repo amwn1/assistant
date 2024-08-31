@@ -54,7 +54,7 @@ h2 {
 }
 
 /* Style the links inside the response box */
-.response-box a {
+.available {
   color: black !important;
   font-weight: bold;
   text-decoration: none !important;
@@ -63,8 +63,17 @@ h2 {
   padding-bottom: 2px;
 }
 
+.not-available {
+  color: black !important;
+  font-weight: bold;
+  text-decoration: none !important; /* No underline for unavailable names */
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
 /* Create the underline effect */
-.response-box a::after {
+.available::after {
   content: '';
   position: absolute;
   width: 100%;
@@ -78,14 +87,14 @@ h2 {
 }
 
 /* Add hover effect for links */
-.response-box a:hover::after {
+.available:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
   transition: transform 0.2s ease-in; /* Faster transition on hover-in */
 }
 
 /* On mouse-out, faster ease-out */
-.response-box a::after {
+.available::after {
   transition: transform 0.1s ease-out; /* Faster transition on hover-out */
 }
 

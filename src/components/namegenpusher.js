@@ -35,13 +35,14 @@ const NameGenPusher = () => {
   }, []);
 
   const checkDomainAvailability = async (domain) => {
+    const domainWithCom = `${domain}.com`; // Append .com to each domain name
     try {
-      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domain}`);
+      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
       if (!response.ok) {
         throw new Error(`Error fetching domain availability: ${response.statusText}`);
       }
       const data = await response.json();
-      setAvailability(prev => ({ ...prev, [domain]: data.available }));
+      setAvailability(prev => ({ ...prev, [domain]: data.available })); // Use original domain name as key
     } catch (error) {
       console.error('Error checking domain availability:', error);
     }
@@ -51,7 +52,9 @@ const NameGenPusher = () => {
     if (content.length > 0) {
       content.forEach(section => {
         section.names.forEach(name => {
-          checkDomainAvailability(name);
+          if (!availability.hasOwnProperty(name)) {
+            checkDomainAvailability(name); // Only check availability for names
+          }
         });
       });
     }
@@ -73,6 +76,7 @@ const NameGenPusher = () => {
                       href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className={availability[name] ? 'available' : 'not-available'} // Apply class based on availability
                     >
                       {name}
                     </a>
