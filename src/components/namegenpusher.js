@@ -5,7 +5,6 @@ const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState({}); // State to hold domain availability
-  const [checkedDomains, setCheckedDomains] = useState([]); // State to track checked domains
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -30,16 +29,22 @@ const NameGenPusher = () => {
     };
 
     fetchContent();
+    const intervalId = setInterval(() => {
+      fetchContent();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const checkDomainAvailability = async (domain) => {
+    // Trim spaces and format domain names correctly
     const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     console.log('Checking domain:', domainWithCom); // Debugging log
-
     try {
       const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
       
+      // Check if the API call was successful
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
         setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if there's an error
@@ -48,7 +53,8 @@ const NameGenPusher = () => {
 
       const data = await response.json();
       console.log('API response for domain:', data); // Debugging log
-
+      
+      // Enhanced check for the 'available' key
       if (data && typeof data.available === 'boolean') {
         console.log(`Domain ${domain} availability:`, data.available); // Log the actual availability value
         setAvailability(prev => ({ ...prev, [domain]: data.available })); 
@@ -56,7 +62,7 @@ const NameGenPusher = () => {
         console.warn('Unexpected API response format or missing "available" key:', data);
         setAvailability(prev => ({ ...prev, [domain]: false })); // Default to unavailable if response is not as expected
       }
-
+      
       console.log('Updated availability state:', availability); // Debugging log
     } catch (error) {
       console.error('Error checking domain availability:', error);
@@ -68,14 +74,13 @@ const NameGenPusher = () => {
     if (content.length > 0) {
       content.forEach(section => {
         section.names.forEach(name => {
-          if (!checkedDomains.includes(name) && !availability.hasOwnProperty(name)) {
+          if (!availability.hasOwnProperty(name)) {
             checkDomainAvailability(name); // Check availability for each name
-            setCheckedDomains(prev => [...prev, name]); // Add to checked domains
           }
         });
       });
     }
-  }, [content, checkedDomains]); // Add checkedDomains to dependencies to ensure it updates
+  }, [content, availability]);
 
   return (
     <div className="vf-container">
