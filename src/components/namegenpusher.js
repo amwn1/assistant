@@ -75,12 +75,12 @@ const NameGenPusher = () => {
       content.forEach(section => {
         section.names.forEach(name => {
           if (!availability.hasOwnProperty(name)) {
-            checkDomainAvailability(name); // Only check availability for names
+            checkDomainAvailability(name); // Check availability for each name
           }
         });
       });
     }
-  }, [content]);
+  }, [content, availability]);
 
   return (
     <div className="vf-container">
