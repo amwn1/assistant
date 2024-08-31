@@ -37,20 +37,36 @@ const NameGenPusher = () => {
   }, []);
 
   const checkDomainAvailability = async (domain) => {
-    const domainWithCom = `${domain}.com`; // Append .com to each domain name
+    // Trim spaces and format domain names correctly
+    const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely or replace with hyphen using replace(/\s+/g, '-')
+    const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     console.log('Checking domain:', domainWithCom); // Debugging log
     try {
       const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
+      
+      // Check if the API call was successful
       if (!response.ok) {
-        throw new Error(`Error fetching domain availability: ${response.statusText}`);
+        console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
+        setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if there's an error
+        return;
       }
+
       const data = await response.json();
       console.log('API response for domain:', data); // Debugging log
       
-      setAvailability(prev => ({ ...prev, [domain]: data.available })); 
-      console.log('Current availability state:', availability); // Debugging log
+      // Enhanced check for the 'available' key
+      if (data && typeof data.available === 'boolean') {
+        console.log(`Domain ${domain} availability:`, data.available); // Log the actual availability value
+        setAvailability(prev => ({ ...prev, [domain]: data.available })); 
+      } else {
+        console.warn('Unexpected API response format or missing "available" key:', data);
+        setAvailability(prev => ({ ...prev, [domain]: false })); // Default to unavailable if response is not as expected
+      }
+      
+      console.log('Updated availability state:', availability); // Debugging log
     } catch (error) {
       console.error('Error checking domain availability:', error);
+      setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if there's an exception
     }
   };
 
