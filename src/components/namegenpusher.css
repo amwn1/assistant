@@ -53,7 +53,7 @@ h2 {
   cursor: pointer;
 }
 
-/* Style the links inside the response box */
+/* Style the links inside the response box for available domains */
 .available {
   color: black !important;
   font-weight: bold;
@@ -63,16 +63,7 @@ h2 {
   padding-bottom: 2px;
 }
 
-.not-available {
-  color: black !important;
-  font-weight: bold;
-  text-decoration: none !important; /* No underline for unavailable names */
-  position: relative;
-  display: inline-block;
-  padding-bottom: 2px;
-}
-
-/* Create the underline effect */
+/* Create the underline effect for available names */
 .available::after {
   content: '';
   position: absolute;
@@ -86,16 +77,26 @@ h2 {
   transition: transform 0.3s ease-out;
 }
 
-/* Add hover effect for links */
+/* Add hover effect for available names */
 .available:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
-  transition: transform 0.2s ease-in; /* Faster transition on hover-in */
+  transition: transform 0.2s ease-in;
 }
 
-/* On mouse-out, faster ease-out */
+/* Faster ease-out transition for underline on mouse-out */
 .available::after {
-  transition: transform 0.1s ease-out; /* Faster transition on hover-out */
+  transition: transform 0.1s ease-out;
+}
+
+/* Style the links for not available domains */
+.not-available {
+  color: black !important;
+  font-weight: bold;
+  text-decoration: none !important; /* No underline for unavailable names */
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
 }
 
 /* Make headings in the response box uppercase */

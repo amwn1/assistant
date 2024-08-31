@@ -42,7 +42,13 @@ const NameGenPusher = () => {
         throw new Error(`Error fetching domain availability: ${response.statusText}`);
       }
       const data = await response.json();
-      setAvailability(prev => ({ ...prev, [domain]: data.available })); // Use original domain name as key
+      
+      // Assuming GoDaddy response includes 'available' key to indicate availability status
+      if (data && data.domains && data.domains.length > 0) {
+        setAvailability(prev => ({ ...prev, [domain]: data.domains[0].available })); // Use original domain name as key
+      } else {
+        setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if no valid response
+      }
     } catch (error) {
       console.error('Error checking domain availability:', error);
     }
@@ -71,21 +77,19 @@ const NameGenPusher = () => {
               <h3>{section.category}</h3>
               {section.names.length > 0 ? (
                 section.names.map((name, nameIndex) => (
-                  <div key={nameIndex}>
-                    <a
-                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={availability[name] ? 'available' : 'not-available'} // Apply class based on availability
-                    >
-                      {name}
-                    </a>
-                    {availability[name] !== undefined && (
-                      <span style={{ marginLeft: '10px', color: availability[name] ? 'green' : 'red' }}>
-                        {availability[name] ? 'Available' : 'Not Available'}
-                      </span>
-                    )}
-                  </div>
+                  availability[name] ? ( // Only render available names
+                    <div key={nameIndex}>
+                      <a
+                        href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className='available' // Apply class based on availability
+                      >
+                        {name}
+                      </a>
+                      <span style={{ marginLeft: '10px', color: 'green' }}>Available</span>
+                    </div>
+                  ) : null // Do not render if not available
                 ))
               ) : (
                 <p>No names available for this category</p>
