@@ -15,6 +15,8 @@ const NameGenPusher = () => {
         }
         const data = await response.json();
 
+        console.log('Fetched content:', data.content); // Debugging log
+
         if (data.content && data.content.length > 0) {
           setContent(data.content);
         } else {
@@ -36,15 +38,17 @@ const NameGenPusher = () => {
 
   const checkDomainAvailability = async (domain) => {
     const domainWithCom = `${domain}.com`; // Append .com to each domain name
+    console.log('Checking domain:', domainWithCom); // Debugging log
     try {
       const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
       if (!response.ok) {
         throw new Error(`Error fetching domain availability: ${response.statusText}`);
       }
       const data = await response.json();
+      console.log('API response for domain:', data); // Debugging log
       
-      // Directly use the 'available' field in the response
       setAvailability(prev => ({ ...prev, [domain]: data.available })); 
+      console.log('Current availability state:', availability); // Debugging log
     } catch (error) {
       console.error('Error checking domain availability:', error);
     }
