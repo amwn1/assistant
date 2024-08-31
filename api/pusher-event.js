@@ -1,100 +1,134 @@
-// Temporary in-memory storage
-let latestMessage = "";
+import React, { useEffect, useState } from 'react';
+import './namegenpusher.css';
 
-// Function to parse the incoming message and return structured content
-function parseContentFromMessage(message) {
-  const content = [];
-  const categoryRegex = /### (.*?)\n/g; // Match category headings
-  const nameRegex = /- \[([^\]]+)\]\(#\)/g; // Match names
+const NameGenPusher = () => {
+  const [content, setContent] = useState('');
+  const [error, setError] = useState('');
+  const [domainAvailability, setDomainAvailability] = useState({});
 
-  let categoryMatch;
-  let lastIndex = 0;
-
-  while ((categoryMatch = categoryRegex.exec(message)) !== null) {
-    const category = categoryMatch[1].trim();
-    const categoryStartIndex = categoryMatch.index;
-    const nextCategoryMatch = categoryRegex.exec(message);
-    const categorySection = message.slice(
-      categoryStartIndex,
-      nextCategoryMatch ? nextCategoryMatch.index : message.length
-    );
-
-    const names = [];
-    let nameMatch;
-    while ((nameMatch = nameRegex.exec(categorySection)) !== null) {
-      names.push(nameMatch[1].trim());
-    }
-
-    content.push({ category, names });
-    lastIndex = categoryRegex.lastIndex;
-  }
-
-  return content;
-}
-
-// API handler
-export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "https://thenameexperts.com");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // Handle preflight request (OPTIONS)
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
-
-  try {
-    if (req.method === "POST") {
-      let body;
+  useEffect(() => {
+    const fetchContent = async () => {
       try {
-        if (req.headers["content-type"] === "application/x-www-form-urlencoded") {
-          // Parse x-www-form-urlencoded data
-          body = Object.fromEntries(new URLSearchParams(req.body));
-        } else {
-          // Fallback to JSON parsing
-          body = req.body;
-          if (typeof body === "string") {
-            body = JSON.parse(body);
-          }
+        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.statusText}`);
+        }
+        const data = await response.json();
+        const htmlContent = parseContent(data.message);
+        setContent(htmlContent);
+
+        // Extract domain names for checking availability
+        const domainNames = extractDomainNames(data.message);
+        if (domainNames.length > 0) {
+          checkDomainAvailability(domainNames);
         }
       } catch (error) {
-        console.error("Error parsing request:", error, "Received body:", req.body);
-        return res.status(400).json({ message: "Invalid request format" });
+        console.error('Error fetching content:', error);
+        setError('Describe your Business to the Chatbot');
       }
+    };
 
-      const { message } = body;
+    fetchContent();
+    const intervalId = setInterval(() => {
+      fetchContent();
+    }, 5000);
 
-      if (!message) {
-        console.log("No message provided in request body:", body);
-        return res.status(400).json({ message: "Bad request, no message provided" });
-      }
+    return () => clearInterval(intervalId);
+  }, []);
 
-      // Store the latest message in memory
-      latestMessage = message;
-
-      return res.status(200).json({ message: "Data received successfully" });
-    } else if (req.method === "GET") {
-      // Serve the latest message and then clear it
-      if (!latestMessage) {
-        console.log("No data available for GET request");
-        return res.status(404).json({ message: "No data available" });
-      }
-
-      console.log("Serving data for GET request:", latestMessage);
-      const responseMessage = latestMessage;
-      latestMessage = ""; // Clear the memory after serving the data
-
-      // Parse the message to structured content
-      const parsedContent = parseContentFromMessage(responseMessage);
-      return res.status(200).json({ content: parsedContent });
-    } else {
-      console.log("Invalid method:", req.method);
-      return res.status(405).json({ message: "Method not allowed" });
+  // Extract domain names from content
+  const extractDomainNames = (markdown) => {
+    const regex = /\[([^\]]+)\]\(#\)/g;
+    let match;
+    const domains = [];
+    while ((match = regex.exec(markdown)) !== null) {
+      domains.push(match[1]);
     }
-  } catch (error) {
-    console.error("Unexpected error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-}
+    return domains;
+  };
+
+  // Check domain availability
+  const checkDomainAvailability = async (domainNames) => {
+    const apiKey = 'your-godaddy-api-key';
+    const apiSecret = 'your-godaddy-api-secret';
+
+    try {
+      const availability = await Promise.all(
+        domainNames.map(async (domain) => {
+          const response = await fetch(
+            `https://api.ote-godaddy.com/v1/domains/available?domain=${encodeURIComponent(domain)}&checkType=FAST&forTransfer=false`,
+            {
+              headers: {
+                Accept: 'application/json',
+                Authorization: `sso-key 3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa:3MLCLyegkYhPjTkUa48qM2`,
+              },
+            }
+          );
+          const data = await response.json();
+          return { domain, available: data.available };
+        })
+      );
+
+      // Map availability to domain names
+      const availabilityMap = availability.reduce((acc, { domain, available }) => {
+        acc[domain] = available;
+        return acc;
+      }, {});
+
+      setDomainAvailability(availabilityMap);
+    } catch (error) {
+      console.error('Error checking domain availability:', error);
+    }
+  };
+
+  // Parse markdown content to HTML
+  const parseContent = (markdown) => {
+    if (!markdown) return '<p>No names generated</p>';
+
+    // Regular expression to match categories and names
+    const categoryRegex = /### (.*?)\n([\s\S]*?)(?=\n###|\n$)/g;
+    const categoryMatches = [...markdown.matchAll(categoryRegex)];
+
+    // Map categories to names
+    const categories = categoryMatches.map(([_, categoryName, names]) => {
+      const nameRegex = /- \[([^\]]+)\]\(#\)/g;
+      const nameMatches = [...names.matchAll(nameRegex)];
+      const nameLinks = nameMatches.map(([_, name]) => ({
+        name,
+        available: domainAvailability[name] !== undefined ? domainAvailability[name] : null,
+      }));
+
+      return {
+        categoryName,
+        nameLinks,
+      };
+    });
+
+    return categories
+      .map(({ categoryName, nameLinks }) => `
+        <h3>${categoryName}</h3>
+        <ul>
+          ${nameLinks.map(({ name, available }) => `
+            <li>
+              <a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}" 
+                 target="_blank" 
+                 style="${available === true ? 'text-decoration: underline;' : available === false ? 'text-decoration: none;' : ''}">
+                ${name}
+              </a>
+            </li>
+          `).join('')}
+        </ul>
+      `)
+      .join('');
+  };
+
+  return (
+    <div className="vf-container">
+      <h2>Generated Names</h2>
+      {error && <p style={{ color: 'cyan' }}>{error}</p>}
+      <div className="response-box" dangerouslySetInnerHTML={{ __html: content }} />
+    </div>
+  );
+};
+
+export default NameGenPusher;
