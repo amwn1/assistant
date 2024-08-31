@@ -4,19 +4,19 @@ import "./namegenpusher.css";
 const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
+  const [availability, setAvailability] = useState({}); // State to hold domain availability
 
   useEffect(() => {
-    // Function to fetch content from the Vercel function
     const fetchContent = async () => {
       try {
-        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event'); // Update with your actual server URL
+        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
-        const data = await response.json(); // Fetch response as JSON
+        const data = await response.json();
 
         if (data.content && data.content.length > 0) {
-          setContent(data.content); // Set the fetched content to state
+          setContent(data.content);
         } else {
           setError('No names generated');
         }
@@ -26,17 +26,36 @@ const NameGenPusher = () => {
       }
     };
 
-    // Initial fetch
     fetchContent();
-
-    // Set up polling every 5 seconds
     const intervalId = setInterval(() => {
       fetchContent();
     }, 5000);
 
-    // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
+
+  const checkDomainAvailability = async (domain) => {
+    try {
+      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domain}`);
+      if (!response.ok) {
+        throw new Error(`Error fetching domain availability: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setAvailability(prev => ({ ...prev, [domain]: data.available }));
+    } catch (error) {
+      console.error('Error checking domain availability:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (content.length > 0) {
+      content.forEach(section => {
+        section.names.forEach(name => {
+          checkDomainAvailability(name);
+        });
+      });
+    }
+  }, [content]);
 
   return (
     <div className="vf-container">
@@ -50,9 +69,18 @@ const NameGenPusher = () => {
               {section.names.length > 0 ? (
                 section.names.map((name, nameIndex) => (
                   <div key={nameIndex}>
-                    <a href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       {name}
                     </a>
+                    {availability[name] !== undefined && (
+                      <span style={{ marginLeft: '10px', color: availability[name] ? 'green' : 'red' }}>
+                        {availability[name] ? 'Available' : 'Not Available'}
+                      </span>
+                    )}
                   </div>
                 ))
               ) : (
