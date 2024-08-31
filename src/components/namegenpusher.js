@@ -38,7 +38,7 @@ const NameGenPusher = () => {
 
   const checkDomainAvailability = async (domain) => {
     // Trim spaces and format domain names correctly
-    const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely or replace with hyphen using replace(/\s+/g, '-')
+    const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     console.log('Checking domain:', domainWithCom); // Debugging log
     try {
@@ -96,7 +96,7 @@ const NameGenPusher = () => {
                   availability[name] ? ( // Only render available names
                     <div key={nameIndex}>
                       <a
-                        href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`}
+                        href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className='available' // Apply class based on availability
