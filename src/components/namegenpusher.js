@@ -1,33 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import './namegenpusher.css';
+import "./namegenpusher.css";
 
 const NameGenPusher = () => {
   const [content, setContent] = useState(''); // State to hold the generated content
   const [error, setError] = useState('');
+  const [domainAvailability, setDomainAvailability] = useState({}); // State for domain availability
 
   useEffect(() => {
-    // Function to fetch content from the Vercel function and check domain availability
+    // Function to fetch content from the Vercel function
     const fetchContent = async () => {
       try {
-        // Fetch content from your Vercel API endpoint
-        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
+        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event'); // Update with your actual server URL
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
-        const data = await response.json();
-
-        // Extract the names and categories
-        const { message } = data;
-        const parsedContent = await checkDomainAvailability(message);
-
-        setContent(parsedContent); // Set the generated HTML content to state
+        const data = await response.json(); // Fetch response as JSON
+        const htmlContent = await parseContent(data.message); // Parse the markdown content
+        setContent(htmlContent); // Set the generated HTML content to state
       } catch (error) {
         console.error('Error fetching content:', error);
         setError('Describe your Business to the Chatbot');
       }
     };
 
-    // Initial fetch
+    // Fetch content on component mount
     fetchContent();
 
     // Set up polling every 5 seconds
@@ -39,52 +35,52 @@ const NameGenPusher = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Function to parse the markdown content into HTML
-  const parseContent = (markdown) => {
-    if (!markdown) return '<p>No names generated</p>';
-
-    // Replace markdown headings and links with HTML equivalents
-    return markdown
-      .replace(/### (.*?)(?=\s*-)/g, '<h3>$1</h3>') // Convert headings
-      .replace(/- \[([^\]]+)\]\(#\)/g, (_, name) => {
-        // Correctly encode the URL and name
-        const encodedName = encodeURIComponent(name.trim());
-        return `<a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodedName}" target="_blank" style="${nameAvailability[name] ? 'text-decoration: underline;' : ''}">${name}</a>`;
-      }) // Convert markdown links to HTML links
-      .replace(/\s*-\s*/g, '<br>'); // Convert bullet points to line breaks
+  // Function to check domain availability
+  const checkDomainAvailability = async (domain) => {
+    try {
+      const response = await fetch(`/api/check-domain?domain=${encodeURIComponent(domain)}`);
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.available;
+    } catch (error) {
+      console.error('Error checking domain availability:', error);
+      return false;
+    }
   };
 
-  // Function to check domain availability
-  const checkDomainAvailability = async (markdown) => {
-    // Extract domain names from the markdown content
-    const domainNames = Array.from(new Set(markdown.match(/- \[([^\]]+)\]\(#\)/g)?.map(match => match.replace(/- \[|\]\(#\)/g, '').trim()) || []));
-    
-    // Perform the domain availability checks
-    const availabilityChecks = await Promise.all(domainNames.map(async (name) => {
-      const response = await fetch(`https://api.ote-godaddy.com/v1/domains/available?domain=${encodeURIComponent(name)}&checkType=FAST&forTransfer=false`, {
-        headers: {
-          'accept': 'application/json',
-          'Authorization': 'sso-key 3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa:3MLCLyegkYhPjTkUa48qM2'
-        }
-      });
-      const data = await response.json();
-      return { name, available: data.available };
+  // Function to parse the markdown content into HTML
+  const parseContent = async (markdown) => {
+    if (!markdown) return '<p>No names generated</p>';
+
+    const sections = markdown.split('### ').filter(section => section.trim() !== '');
+    const results = await Promise.all(sections.map(async (section) => {
+      const [categoryName, namesStr] = section.split('\n-').map(part => part.trim());
+      const names = namesStr.split('\n').filter(name => name.trim() !== '').map(name => name.trim());
+      
+      const nameLinks = await Promise.all(names.map(async (name) => {
+        const available = await checkDomainAvailability(name);
+        return { name, available };
+      }));
+
+      return `
+        <h3>${categoryName}</h3>
+        <ul>
+          ${nameLinks.map(({ name, available }) => `
+            <li>
+              <a href="https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}" 
+                 target="_blank" 
+                 style="${available ? 'text-decoration: underline;' : ''}">
+                ${name}
+              </a>
+            </li>
+          `).join('')}
+        </ul>
+      `;
     }));
 
-    // Create a map of domain names to their availability status
-    const nameAvailability = availabilityChecks.reduce((acc, { name, available }) => {
-      acc[name] = available;
-      return acc;
-    }, {});
-
-    // Replace domain names in the markdown with their availability status
-    const updatedMarkdown = markdown.replace(/- \[([^\]]+)\]\(#\)/g, (match, name) => {
-      const available = nameAvailability[name];
-      return `- [${name}](#)`;
-    });
-
-    // Return the parsed and updated HTML content
-    return parseContent(updatedMarkdown);
+    return results.join('');
   };
 
   return (
