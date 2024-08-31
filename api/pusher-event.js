@@ -5,16 +5,13 @@ let latestMessage = "";
 function parseContentFromMessage(message) {
   const content = [];
   const categoryRegex = /### (.*?)\n/g; // Match category headings
-  const nameRegex = /- \[([^\]]+)\]\(#\)/g; // Match names under categories
+  const nameRegex = /- \[([^\]]+)\]\(#\)/g; // Match names
 
   let categoryMatch;
-  let lastIndex = 0; // Track the last matched position
+  let lastIndex = 0;
 
   while ((categoryMatch = categoryRegex.exec(message)) !== null) {
     const category = categoryMatch[1].trim();
-    const names = [];
-
-    // Capture the section of the message belonging to this category
     const categoryStartIndex = categoryMatch.index;
     const nextCategoryMatch = categoryRegex.exec(message);
     const categorySection = message.slice(
@@ -22,7 +19,7 @@ function parseContentFromMessage(message) {
       nextCategoryMatch ? nextCategoryMatch.index : message.length
     );
 
-    // Reset name matching for this section
+    const names = [];
     let nameMatch;
     while ((nameMatch = nameRegex.exec(categorySection)) !== null) {
       names.push(nameMatch[1].trim());
@@ -52,9 +49,7 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
       let body;
       try {
-        if (
-          req.headers["content-type"] === "application/x-www-form-urlencoded"
-        ) {
+        if (req.headers["content-type"] === "application/x-www-form-urlencoded") {
           // Parse x-www-form-urlencoded data
           body = Object.fromEntries(new URLSearchParams(req.body));
         } else {
@@ -65,12 +60,7 @@ export default async function handler(req, res) {
           }
         }
       } catch (error) {
-        console.error(
-          "Error parsing request:",
-          error,
-          "Received body:",
-          req.body
-        );
+        console.error("Error parsing request:", error, "Received body:", req.body);
         return res.status(400).json({ message: "Invalid request format" });
       }
 
@@ -78,9 +68,7 @@ export default async function handler(req, res) {
 
       if (!message) {
         console.log("No message provided in request body:", body);
-        return res
-          .status(400)
-          .json({ message: "Bad request, no message provided" });
+        return res.status(400).json({ message: "Bad request, no message provided" });
       }
 
       // Store the latest message in memory
