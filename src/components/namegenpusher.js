@@ -5,7 +5,7 @@ const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState({}); // State to hold domain availability
-  const [checkedDomains, setCheckedDomains] = useState(new Set()); // State to track checked domains
+  const [checkedDomains, setCheckedDomains] = useState([]); // State to track checked domains
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -68,14 +68,14 @@ const NameGenPusher = () => {
     if (content.length > 0) {
       content.forEach(section => {
         section.names.forEach(name => {
-          if (!checkedDomains.has(name) && !availability.hasOwnProperty(name)) {
+          if (!checkedDomains.includes(name) && !availability.hasOwnProperty(name)) {
             checkDomainAvailability(name); // Check availability for each name
-            setCheckedDomains(prev => new Set(prev).add(name)); // Add to checked domains
+            setCheckedDomains(prev => [...prev, name]); // Add to checked domains
           }
         });
       });
     }
-  }, [content]);
+  }, [content, checkedDomains]); // Add checkedDomains to dependencies to ensure it updates
 
   return (
     <div className="vf-container">
