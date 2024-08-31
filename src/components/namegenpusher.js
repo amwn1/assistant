@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
 
 const NameGenPusher = () => {
-  const [names, setNames] = useState([]); // State to hold the names
+  const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Function to fetch names from the Vercel function
-    const fetchNames = async () => {
+    // Function to fetch content from the Vercel function
+    const fetchContent = async () => {
       try {
         const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event'); // Update with your actual server URL
         if (!response.ok) {
@@ -15,23 +15,23 @@ const NameGenPusher = () => {
         }
         const data = await response.json(); // Fetch response as JSON
 
-        if (data.names && data.names.length > 0) {
-          setNames(data.names); // Set the fetched names to state
+        if (data.content && data.content.length > 0) {
+          setContent(data.content); // Set the fetched content to state
         } else {
-          setError('No names available');
+          setError('No names generated');
         }
       } catch (error) {
-        console.error('Error fetching names:', error);
+        console.error('Error fetching content:', error);
         setError('Describe your Business to the Chatbot');
       }
     };
 
     // Initial fetch
-    fetchNames();
+    fetchContent();
 
     // Set up polling every 5 seconds
     const intervalId = setInterval(() => {
-      fetchNames();
+      fetchContent();
     }, 5000);
 
     // Clean up interval on component unmount
@@ -43,12 +43,17 @@ const NameGenPusher = () => {
       <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       <div className="response-box">
-        {names.length > 0 ? (
-          names.map((name, index) => (
+        {content.length > 0 ? (
+          content.map((section, index) => (
             <div key={index}>
-              <a href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer">
-                {name}
-              </a>
+              <h3>{section.category}</h3>
+              {section.names.map((name, nameIndex) => (
+                <div key={nameIndex}>
+                  <a href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer">
+                    {name}
+                  </a>
+                </div>
+              ))}
             </div>
           ))
         ) : (
