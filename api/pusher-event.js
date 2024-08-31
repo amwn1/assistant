@@ -1,7 +1,7 @@
 import { URLSearchParams } from "url";
 
-// Temporary in-memory storage for names
-let namesArray = [];
+// Temporary in-memory storage for categories and names
+let contentArray = [];
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -20,10 +20,8 @@ export default async function handler(req, res) {
       let body;
       try {
         if (req.headers["content-type"] === "application/x-www-form-urlencoded") {
-          // Parse x-www-form-urlencoded data
           body = Object.fromEntries(new URLSearchParams(req.body));
         } else {
-          // Fallback to JSON parsing
           body = req.body;
           if (typeof body === "string") {
             body = JSON.parse(body);
@@ -41,19 +39,18 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: "Bad request, no message provided" });
       }
 
-      // Parse and store names in the namesArray
-      const parsedNames = parseNamesFromMessage(message);
-      namesArray = [...namesArray, ...parsedNames];
+      // Parse and store content (categories and names) in the contentArray
+      contentArray = parseContentFromMessage(message);
 
-      return res.status(200).json({ message: "Data received and names stored successfully" });
+      return res.status(200).json({ message: "Data received and content stored successfully" });
     } else if (req.method === "GET") {
-      if (namesArray.length === 0) {
-        console.log("No names available for GET request");
-        return res.status(404).json({ message: "No names available" });
+      if (contentArray.length === 0) {
+        console.log("No content available for GET request");
+        return res.status(404).json({ message: "No content available" });
       }
 
-      console.log("Serving names for GET request:", namesArray);
-      return res.status(200).json({ names: namesArray });
+      console.log("Serving content for GET request:", contentArray);
+      return res.status(200).json({ content: contentArray });
     } else {
       console.log("Invalid method:", req.method);
       return res.status(405).json({ message: "Method not allowed" });
@@ -64,16 +61,29 @@ export default async function handler(req, res) {
   }
 }
 
-// Function to parse names from the incoming message
-function parseNamesFromMessage(message) {
+// Function to parse content (categories and names) from the incoming message
+function parseContentFromMessage(message) {
+  const content = [];
+  const categoryRegex = /### (.*?)\n/g;
   const nameRegex = /- \[([^\]]+)\]\(#\)/g;
-  let match;
-  const names = [];
 
-  // Extract all names that match the regex
-  while ((match = nameRegex.exec(message)) !== null) {
-    names.push(match[1].trim());
+  let categoryMatch;
+  while ((categoryMatch = categoryRegex.exec(message)) !== null) {
+    const category = categoryMatch[1].trim();
+    const names = [];
+
+    let nameMatch;
+    // Start matching names after the current category match index
+    while ((nameMatch = nameRegex.exec(message)) !== null) {
+      // Stop collecting names if we reach another category
+      if (nameRegex.lastIndex > categoryRegex.lastIndex && categoryRegex.lastIndex !== 0) {
+        break;
+      }
+      names.push(nameMatch[1].trim());
+    }
+
+    content.push({ category, names });
   }
 
-  return names;
+  return content;
 }
