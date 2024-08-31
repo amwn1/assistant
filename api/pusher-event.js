@@ -73,7 +73,12 @@ function parseContentFromMessage(message) {
     const names = [];
 
     let nameMatch;
+    // Start matching names after the current category match index
     while ((nameMatch = nameRegex.exec(message)) !== null) {
+      // Stop collecting names if we reach another category
+      if (nameRegex.lastIndex > categoryRegex.lastIndex && categoryRegex.lastIndex !== 0) {
+        break;
+      }
       names.push(nameMatch[1].trim());
     }
 

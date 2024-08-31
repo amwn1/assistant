@@ -47,13 +47,17 @@ const NameGenPusher = () => {
           content.map((section, index) => (
             <div key={index}>
               <h3>{section.category}</h3>
-              {section.names.map((name, nameIndex) => (
-                <div key={nameIndex}>
-                  <a href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer">
-                    {name}
-                  </a>
-                </div>
-              ))}
+              {section.names.length > 0 ? (
+                section.names.map((name, nameIndex) => (
+                  <div key={nameIndex}>
+                    <a href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer">
+                      {name}
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <p>No names available for this category</p>
+              )}
             </div>
           ))
         ) : (
