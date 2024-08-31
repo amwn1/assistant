@@ -62,28 +62,41 @@ export default async function handler(req, res) {
 }
 
 // Function to parse content (categories and names) from the incoming message
+// Add this parsing function to the top or somewhere before you process incoming data
 function parseContentFromMessage(message) {
   const content = [];
-  const categoryRegex = /### (.*?)\n/g;
-  const nameRegex = /- \[([^\]]+)\]\(#\)/g;
+  const categoryRegex = /### (.*?)\n/g; // Match category headings
+  const nameRegex = /- \[([^\]]+)\]\(#\)/g; // Match names under categories
 
   let categoryMatch;
+  let lastIndex = 0; // Track the last matched position
+
   while ((categoryMatch = categoryRegex.exec(message)) !== null) {
     const category = categoryMatch[1].trim();
     const names = [];
 
+    // Capture the section of the message belonging to this category
+    const categoryStartIndex = categoryMatch.index;
+    const nextCategoryMatch = categoryRegex.exec(message);
+    const categorySection = message.slice(
+      categoryStartIndex,
+      nextCategoryMatch ? nextCategoryMatch.index : message.length
+    );
+
+    // Reset name matching for this section
     let nameMatch;
-    // Start matching names after the current category match index
-    while ((nameMatch = nameRegex.exec(message)) !== null) {
-      // Stop collecting names if we reach another category
-      if (nameRegex.lastIndex > categoryRegex.lastIndex && categoryRegex.lastIndex !== 0) {
-        break;
-      }
+    while ((nameMatch = nameRegex.exec(categorySection)) !== null) {
       names.push(nameMatch[1].trim());
     }
 
     content.push({ category, names });
+    lastIndex = categoryRegex.lastIndex;
   }
 
   return content;
 }
+
+// Use this function where you process the message
+const parsedContent = parseContentFromMessage(latestMessage);
+res.status(200).json({ content: parsedContent });
+
