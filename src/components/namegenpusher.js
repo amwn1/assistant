@@ -43,12 +43,8 @@ const NameGenPusher = () => {
       }
       const data = await response.json();
       
-      // Assuming GoDaddy response includes 'available' key to indicate availability status
-      if (data && data.domains && data.domains.length > 0) {
-        setAvailability(prev => ({ ...prev, [domain]: data.domains[0].available })); // Use original domain name as key
-      } else {
-        setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if no valid response
-      }
+      // Directly use the 'available' field in the response
+      setAvailability(prev => ({ ...prev, [domain]: data.available })); 
     } catch (error) {
       console.error('Error checking domain availability:', error);
     }
