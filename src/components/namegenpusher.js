@@ -42,19 +42,8 @@ const NameGenPusher = () => {
     console.log('Checking domain:', domainWithCom); // Debugging log
 
     try {
-      const apiKey = '3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa'; // Replace with your GoDaddy OTE key
-      const apiSecret = '3MLCLyegkYhPjTkUa48qM2'; // Replace with your GoDaddy OTE secret
-
-      const apiUrl = `https://api.ote-godaddy.com/v1/domains/available?domain=${domainWithCom}&checkType=FULL&forTransfer=false`;
-
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json',
-          'Authorization': `sso-key ${apiKey}:${apiSecret}`
-        }
-      });
-
+      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
+      
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
         setAvailability(prev => ({ ...prev, [name]: false })); // Mark as unavailable if there's an error
