@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           const apiKey = '3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa'; // Replace with your GoDaddy OTE key
           const apiSecret = '3MLCLyegkYhPjTkUa48qM2'; // Replace with your GoDaddy OTE secret
 
-          const apiUrl = `https://api.ote-godaddy.com/v1/domains/available?domain=${domain}&checkType=FAST&forTransfer=false`;
+          const apiUrl = `https://api.ote-godaddy.com/v1/domains/available?domain=${domain}&checkType=FULL&forTransfer=false`;
 
           // Make the request to GoDaddy API
           const response = await fetch(apiUrl, {
