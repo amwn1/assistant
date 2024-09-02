@@ -6,6 +6,7 @@ const NameGenPusher = () => {
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState({}); // State to hold domain availability
   const [checkingDomains, setCheckingDomains] = useState([]); // State to hold domains being checked
+  const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -40,10 +41,11 @@ const NameGenPusher = () => {
   const checkDomainAvailability = async (name) => {
     const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
-    console.log('Checking domain:', domainWithCom); // Debugging log
+    const encodedDomain = encodeURIComponent(domainWithCom); // Properly encode the domain name
+    console.log('Checking domain:', encodedDomain); // Debugging log
 
     try {
-      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
+      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`);
       
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
@@ -73,11 +75,12 @@ const NameGenPusher = () => {
         setAvailability(prev => ({ ...prev, [name]: isAvailable }));
       }
     }
+    setAllChecked(true);
     console.log('Completed all domain checks.'); // Debugging log
   };
 
   useEffect(() => {
-    if (content.length > 0) {
+    if (content.length > 0 && !allChecked) {
       const namesToCheck = [];
       content.forEach(section => {
         section.names.forEach(name => {
@@ -91,13 +94,13 @@ const NameGenPusher = () => {
         setCheckingDomains(namesToCheck);
       }
     }
-  }, [content]);
+  }, [content, allChecked]);
 
   useEffect(() => {
-    if (checkingDomains.length > 0) {
+    if (checkingDomains.length > 0 && !allChecked) {
       checkAllDomainsSequentially(checkingDomains);
     }
-  }, [checkingDomains]);
+  }, [checkingDomains, allChecked]);
 
   return (
     <div className="vf-container">
