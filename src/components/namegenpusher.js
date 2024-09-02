@@ -86,6 +86,7 @@ const NameGenPusher = () => {
           content.forEach(section => {
             display[section.category] = section.names.filter(name => availability[name] === true); // Ensure only available names are displayed
           });
+          console.log('Updated display names:', display); // Debugging log
           setDisplayNames(display);
         })();
       }
@@ -105,7 +106,7 @@ const NameGenPusher = () => {
                 displayNames[section.category].map((name, nameIndex) => (
                   <div key={nameIndex}>
                     <a
-                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}`}
+                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className='available' // Apply class based on availability
