@@ -9,6 +9,7 @@ const NameGenPusher = () => {
   const [displayNames, setDisplayNames] = useState({}); // State to store names to be displayed after checks
 
   useEffect(() => {
+    // Fetch content initially
     const fetchContent = async () => {
       try {
         const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
@@ -16,7 +17,6 @@ const NameGenPusher = () => {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
         const data = await response.json();
-
         console.log('Fetched content:', data.content); // Debugging log
 
         if (data.content && data.content.length > 0) {
@@ -31,7 +31,7 @@ const NameGenPusher = () => {
     };
 
     fetchContent();
-  }, []);
+  }, []); // Run only once on mount
 
   const checkDomainAvailability = async (domain) => {
     const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely
@@ -52,13 +52,11 @@ const NameGenPusher = () => {
 
       if (data && typeof data.available === 'boolean') {
         console.log(`Domain ${domain} availability:`, data.available); // Log the actual availability value
-        setAvailability(prev => ({ ...prev, [domain]: data.available })); 
+        setAvailability(prev => ({ ...prev, [domain]: data.available }));
       } else {
         console.warn('Unexpected API response format or missing "available" key:', data);
         setAvailability(prev => ({ ...prev, [domain]: false })); // Default to unavailable if response is not as expected
       }
-
-      console.log('Updated availability state:', availability); // Debugging log
     } catch (error) {
       console.error('Error checking domain availability:', error);
       setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if there's an exception
@@ -77,25 +75,25 @@ const NameGenPusher = () => {
       });
 
       if (namesToCheck.length > 0) {
-        Promise.all(namesToCheck.map(name => checkDomainAvailability(name)))
-          .then(() => {
-            // Once all checks are complete, set the display names
-            const display = {};
-            content.forEach(section => {
-              display[section.category] = section.names.filter(name => availability[name]);
-            });
-            setDisplayNames(display);
+        (async () => {
+          await Promise.all(namesToCheck.map(name => checkDomainAvailability(name)));
+          // Once all checks are complete, set the display names
+          const display = {};
+          content.forEach(section => {
+            display[section.category] = section.names.filter(name => availability[name]);
           });
+          setDisplayNames(display);
+        })();
       }
     }
-  }, [content]);
+  }, [content]); // Remove `checkedDomains` to prevent unnecessary reruns
 
   return (
     <div className="vf-container">
       <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       <div className="response-box">
-        {content.length > 0 ? (
+        {Object.keys(displayNames).length > 0 ? (
           content.map((section, index) => (
             <div key={index}>
               <h3>{section.category}</h3>
