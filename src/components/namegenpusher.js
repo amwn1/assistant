@@ -38,10 +38,10 @@ const NameGenPusher = () => {
   }, []);
 
   const checkDomainAvailability = async (domain) => {
-    // Trim spaces and format domain names correctly
     const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     console.log('Checking domain:', domainWithCom); // Debugging log
+
     try {
       const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
       
@@ -54,7 +54,6 @@ const NameGenPusher = () => {
       const data = await response.json();
       console.log('API response for domain:', data); // Debugging log
       
-      // Enhanced check for the 'available' key
       if (data && typeof data.available === 'boolean') {
         console.log(`Domain ${domain} availability:`, data.available); // Log the actual availability value
         setAvailability(prev => ({ ...prev, [domain]: data.available })); 
@@ -85,13 +84,13 @@ const NameGenPusher = () => {
           // Once all checks are complete, set the display names
           const display = {};
           content.forEach(section => {
-            display[section.category] = section.names.filter(name => availability[name]);
+            display[section.category] = section.names.filter(name => availability[name] === true); // Ensure only available names are displayed
           });
           setDisplayNames(display);
         })();
       }
     }
-  }, [content]);
+  }, [content, availability]);
 
   return (
     <div className="vf-container">
