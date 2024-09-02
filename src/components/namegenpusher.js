@@ -5,6 +5,7 @@ const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState({}); // State to hold domain availability
+  const [checkingDomains, setCheckingDomains] = useState([]); // State to hold domains being checked
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -46,8 +47,7 @@ const NameGenPusher = () => {
       
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-        setAvailability(prev => ({ ...prev, [name]: false })); // Mark as unavailable if there's an error
-        return;
+        return false; // Return false if there's an error
       }
 
       const data = await response.json();
@@ -55,20 +55,29 @@ const NameGenPusher = () => {
 
       if (data && typeof data.available === 'boolean') {
         console.log(`Domain ${data.domain} availability:`, data.available); // Log the actual availability value
-        setAvailability(prev => ({ ...prev, [name]: data.available })); 
+        return data.available;
       } else {
         console.warn('Unexpected API response format or missing "available" key:', data);
-        setAvailability(prev => ({ ...prev, [name]: false })); // Default to unavailable if response is not as expected
+        return false; // Default to unavailable if response is not as expected
       }
     } catch (error) {
       console.error('Error checking domain availability:', error);
-      setAvailability(prev => ({ ...prev, [name]: false })); // Mark as unavailable if there's an exception
+      return false; // Return false if there's an exception
     }
+  };
+
+  const checkAllDomainsSequentially = async (names) => {
+    for (let name of names) {
+      if (!availability.hasOwnProperty(name)) {
+        const isAvailable = await checkDomainAvailability(name);
+        setAvailability(prev => ({ ...prev, [name]: isAvailable }));
+      }
+    }
+    console.log('Completed all domain checks.'); // Debugging log
   };
 
   useEffect(() => {
     if (content.length > 0) {
-      // Collect all names to check
       const namesToCheck = [];
       content.forEach(section => {
         section.names.forEach(name => {
@@ -79,13 +88,16 @@ const NameGenPusher = () => {
       });
 
       if (namesToCheck.length > 0) {
-        (async () => {
-          await Promise.all(namesToCheck.map(name => checkDomainAvailability(name)));
-          console.log('Completed domain checks for all names.'); // Debugging log
-        })();
+        setCheckingDomains(namesToCheck);
       }
     }
   }, [content]);
+
+  useEffect(() => {
+    if (checkingDomains.length > 0) {
+      checkAllDomainsSequentially(checkingDomains);
+    }
+  }, [checkingDomains]);
 
   return (
     <div className="vf-container">
