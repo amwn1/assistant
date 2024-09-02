@@ -36,33 +36,44 @@ const NameGenPusher = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const checkDomainAvailability = async (domain) => {
-    const formattedDomain = domain.trim().replace(/\s+/g, ''); // Remove spaces entirely
+  const checkDomainAvailability = async (name) => {
+    const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     console.log('Checking domain:', domainWithCom); // Debugging log
 
     try {
-      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${domainWithCom}`);
-      
+      const apiKey = '3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa'; // Replace with your GoDaddy OTE key
+      const apiSecret = '3MLCLyegkYhPjTkUa48qM2'; // Replace with your GoDaddy OTE secret
+
+      const apiUrl = `https://api.ote-godaddy.com/v1/domains/available?domain=${domainWithCom}&checkType=FULL&forTransfer=false`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `sso-key ${apiKey}:${apiSecret}`
+        }
+      });
+
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-        setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if there's an error
+        setAvailability(prev => ({ ...prev, [name]: false })); // Mark as unavailable if there's an error
         return;
       }
 
       const data = await response.json();
       console.log('API response for domain:', data); // Debugging log
-      
+
       if (data && typeof data.available === 'boolean') {
         console.log(`Domain ${data.domain} availability:`, data.available); // Log the actual availability value
-        setAvailability(prev => ({ ...prev, [data.domain]: data.available })); 
+        setAvailability(prev => ({ ...prev, [name]: data.available })); 
       } else {
         console.warn('Unexpected API response format or missing "available" key:', data);
-        setAvailability(prev => ({ ...prev, [domain]: false })); // Default to unavailable if response is not as expected
+        setAvailability(prev => ({ ...prev, [name]: false })); // Default to unavailable if response is not as expected
       }
     } catch (error) {
       console.error('Error checking domain availability:', error);
-      setAvailability(prev => ({ ...prev, [domain]: false })); // Mark as unavailable if there's an exception
+      setAvailability(prev => ({ ...prev, [name]: false })); // Mark as unavailable if there's an exception
     }
   };
 
