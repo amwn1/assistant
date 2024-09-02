@@ -110,19 +110,19 @@ const NameGenPusher = () => {
               <h3>{section.category}</h3>
               {section.names.length > 0 ? (
                 section.names.map((name, nameIndex) => (
-                  availability[name] ? ( // Only render available names
-                    <div key={nameIndex}>
-                      <a
-                        href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className='available' // Apply class based on availability
-                      >
-                        {name}
-                      </a>
-                      <span style={{ marginLeft: '10px', color: 'green', fontWeight: 'bold' }}>A</span>
-                    </div>
-                  ) : null // Do not render if not available
+                  <div key={nameIndex}>
+                    <a
+                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={availability[name] ? 'available' : 'not-available'} // Apply class based on availability
+                    >
+                      {name}
+                    </a>
+                    <span style={{ marginLeft: '10px', color: availability[name] ? 'green' : 'red', fontWeight: 'bold' }}>
+                      {availability[name] ? 'A' : 'NA'}
+                    </span>
+                  </div>
                 ))
               ) : (
                 <p>No names available for this category</p>

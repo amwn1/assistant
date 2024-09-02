@@ -99,6 +99,11 @@ h2 {
   padding-bottom: 2px;
 }
 
+/* Remove underline effect for not available names */
+.not-available::after {
+  content: none;
+}
+
 /* Make headings in the response box uppercase */
 .response-box h3 {
   text-transform: uppercase;
