@@ -75,7 +75,12 @@ export default async function handler(req, res) {
           }
 
           const data = await response.json();
-          return res.status(200).json(data);
+
+          // Extract the 'available' field and domain name
+          const isAvailable = data.available || false; // Default to false if 'available' is not defined
+
+          // Send back a minimal response with domain name and availability status
+          return res.status(200).json({ domain: data.domain, available: isAvailable });
         } catch (error) {
           console.error("Error fetching domain availability:", error);
           return res.status(500).json({ message: "Internal Server Error" });

@@ -5,7 +5,6 @@ const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState({}); // State to hold domain availability
-  const [displayNames, setDisplayNames] = useState({}); // State to store names to be displayed after checks
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -55,8 +54,8 @@ const NameGenPusher = () => {
       console.log('API response for domain:', data); // Debugging log
       
       if (data && typeof data.available === 'boolean') {
-        console.log(`Domain ${domain} availability:`, data.available); // Log the actual availability value
-        setAvailability(prev => ({ ...prev, [domain]: data.available })); 
+        console.log(`Domain ${data.domain} availability:`, data.available); // Log the actual availability value
+        setAvailability(prev => ({ ...prev, [data.domain]: data.available })); 
       } else {
         console.warn('Unexpected API response format or missing "available" key:', data);
         setAvailability(prev => ({ ...prev, [domain]: false })); // Default to unavailable if response is not as expected
@@ -81,40 +80,36 @@ const NameGenPusher = () => {
       if (namesToCheck.length > 0) {
         (async () => {
           await Promise.all(namesToCheck.map(name => checkDomainAvailability(name)));
-          // Once all checks are complete, set the display names
-          const display = {};
-          content.forEach(section => {
-            display[section.category] = section.names.filter(name => availability[name] === true); // Ensure only available names are displayed
-          });
-          console.log('Updated display names:', display); // Debugging log
-          setDisplayNames(display);
+          console.log('Completed domain checks.'); // Debugging log
         })();
       }
     }
-  }, [content, availability]);
+  }, [content]);
 
   return (
     <div className="vf-container">
       <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       <div className="response-box">
-        {Object.keys(displayNames).length > 0 ? (
+        {content.length > 0 ? (
           content.map((section, index) => (
             <div key={index}>
               <h3>{section.category}</h3>
-              {displayNames[section.category] && displayNames[section.category].length > 0 ? (
-                displayNames[section.category].map((name, nameIndex) => (
-                  <div key={nameIndex}>
-                    <a
-                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className='available' // Apply class based on availability
-                    >
-                      {name}
-                    </a>
-                    <span style={{ marginLeft: '10px', color: 'green', fontWeight: 'bold' }}>A</span>
-                  </div>
+              {section.names.length > 0 ? (
+                section.names.map((name, nameIndex) => (
+                  availability[name] ? ( // Only render available names
+                    <div key={nameIndex}>
+                      <a
+                        href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className='available' // Apply class based on availability
+                      >
+                        {name}
+                      </a>
+                      <span style={{ marginLeft: '10px', color: 'green', fontWeight: 'bold' }}>A</span>
+                    </div>
+                  ) : null // Do not render if not available
                 ))
               ) : (
                 <p>No names available for this category</p>
