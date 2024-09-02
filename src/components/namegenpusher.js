@@ -68,6 +68,7 @@ const NameGenPusher = () => {
 
   useEffect(() => {
     if (content.length > 0) {
+      // Collect all names to check
       const namesToCheck = [];
       content.forEach(section => {
         section.names.forEach(name => {
@@ -80,7 +81,7 @@ const NameGenPusher = () => {
       if (namesToCheck.length > 0) {
         (async () => {
           await Promise.all(namesToCheck.map(name => checkDomainAvailability(name)));
-          console.log('Completed domain checks.'); // Debugging log
+          console.log('Completed domain checks for all names.'); // Debugging log
         })();
       }
     }
