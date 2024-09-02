@@ -38,7 +38,7 @@ const NameGenPusher = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const checkDomainAvailability = async (name) => {
+  const checkDomainAvailability = async (name, retries = 3) => {
     const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     const encodedDomain = encodeURIComponent(domainWithCom); // Properly encode the domain name
@@ -49,7 +49,13 @@ const NameGenPusher = () => {
       
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-        return false; // Return false if there's an error
+        
+        if (response.status === 404 && retries > 0) {
+          console.log(`Retrying domain check for ${encodedDomain}...`);
+          return await checkDomainAvailability(name, retries - 1); // Retry on 404 error
+        }
+
+        return false; // Return false if there's an error after retries
       }
 
       const data = await response.json();
@@ -64,7 +70,13 @@ const NameGenPusher = () => {
       }
     } catch (error) {
       console.error('Error checking domain availability:', error);
-      return false; // Return false if there's an exception
+      
+      if (retries > 0) {
+        console.log(`Retrying domain check for ${encodedDomain} due to network error...`);
+        return await checkDomainAvailability(name, retries - 1); // Retry on network error
+      }
+
+      return false; // Return false if there's an exception after retries
     }
   };
 
