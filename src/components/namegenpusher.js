@@ -1,4 +1,4 @@
-// This works here v52
+// This works here v52 (updated env variables)
 
 import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
