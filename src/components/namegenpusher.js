@@ -27,6 +27,7 @@ const NameGenPusher = () => {
         setError('Describe your Business to the Chatbot');
       }
     };
+
     fetchContent();
     const intervalId = setInterval(() => {
       fetchContent();
@@ -109,30 +110,32 @@ const NameGenPusher = () => {
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       <div className="response-box">
         {content.length > 0 ? (
-          content.map((section, index) => (
-            <div key={index}>
-              <h3>{section.category}</h3>
-              {section.names.length > 0 ? (
-                section.names.map((name, nameIndex) => (
-                  <div key={nameIndex}>
-                    <a
-                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={availability[name] ? 'available' : 'not-available'} // Apply class based on availability
-                    >
-                      {name}
-                    </a>
-                    <span style={{ marginLeft: '10px', color: availability[name] ? 'green' : 'red', fontWeight: 'bold' }}>
-                      {availability[name] ? 'A' : 'NA'}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p>No names available for this category</p>
-              )}
-            </div>
-          ))
+          content
+            .filter(section => section.names.some(name => availability[name] !== undefined)) // Filter out categories with no available names
+            .map((section, index) => (
+              <div key={index}>
+                <h3>{section.category}</h3>
+                {section.names.length > 0 ? (
+                  section.names.map((name, nameIndex) => (
+                    <div key={nameIndex}>
+                      <a
+                        href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={availability[name] ? 'available' : 'not-available'} // Apply class based on availability
+                      >
+                        {name}
+                      </a>
+                      <span style={{ marginLeft: '10px', color: availability[name] ? 'green' : 'red', fontWeight: 'bold' }}>
+                        {availability[name] ? 'A' : 'NA'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p>No names available for this category</p>
+                )}
+              </div>
+            ))
         ) : (
           <p>No names generated</p>
         )}
