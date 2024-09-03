@@ -45,7 +45,7 @@ const NameGenPusher = () => {
     console.log('Checking domain:', encodedDomain); // Debugging log
 
     try {
-      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`);
+      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event`);
       
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
