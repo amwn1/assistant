@@ -1,5 +1,5 @@
 import { URLSearchParams } from "url";
-import fetch from 'node-fetch'; // Ensure node-fetch is installed for server-side requests
+import fetch from "node-fetch"; // Ensure you import fetch if using in a Node.js environment
 
 // Temporary in-memory storage for categories and names
 let contentArray = [];
@@ -55,10 +55,10 @@ export default async function handler(req, res) {
       if (domain) {
         try {
           // GoDaddy OTE API credentials
-          const apiKey = "3mM44UdC6xxj75_9MYpwv6Fi6btzzdCc6oQLa";
-        const apiSecret = "3MLCLyegkYhPjTkUa48qM2";
+          const apiKey = 'YOUR_API_KEY'; // Replace with your GoDaddy OTE key
+          const apiSecret = 'YOUR_API_SECRET'; // Replace with your GoDaddy OTE secret
 
-          const apiUrl = `https://ote-api.godaddy.com/v1/domains/available?domain=${domain}&checkType=FULL&forTransfer=false`;
+          const apiUrl = `https://api.ote-godaddy.com/v1/domains/available?domain=${encodeURIComponent(domain)}&checkType=FULL&forTransfer=false`;
 
           // Make the request to GoDaddy API
           const response = await fetch(apiUrl, {
@@ -76,12 +76,8 @@ export default async function handler(req, res) {
           }
 
           const data = await response.json();
-
-          // Extract the 'available' field and domain name
-          const isAvailable = data.available || false; // Default to false if 'available' is not defined
-
-          // Send back a minimal response with domain name and availability status
-          return res.status(200).json({ domain: data.domain, available: isAvailable });
+          console.log('Domain check data:', data); // Log the response data for debugging
+          return res.status(200).json(data);
         } catch (error) {
           console.error("Error fetching domain availability:", error);
           return res.status(500).json({ message: "Internal Server Error" });
@@ -119,9 +115,7 @@ function parseContentFromMessage(message) {
       names.push(nameMatch[1].trim());
     }
 
-    if (names.length > 0) {
-      content.push({ category, names });
-    }
+    content.push({ category, names });
   }
 
   return content;
