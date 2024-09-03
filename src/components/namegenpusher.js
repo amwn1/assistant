@@ -1,3 +1,4 @@
+// this one wors as well it removes the neutral or the categories which we don't need
 import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
 
