@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
+
 const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState({}); // State to hold domain availability
   const [checkingDomains, setCheckingDomains] = useState([]); // State to hold domains being checked
   const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
+
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -25,10 +27,12 @@ const NameGenPusher = () => {
         setError('Describe your Business to the Chatbot');
       }
     };
+
     fetchContent();
     const intervalId = setInterval(() => {
       fetchContent();
     }, 5000);
+
     return () => clearInterval(intervalId);
   }, []);
 
@@ -37,23 +41,25 @@ const NameGenPusher = () => {
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     const encodedDomain = encodeURIComponent(domainWithCom); // Properly encode the domain name
     console.log('Checking domain:', encodedDomain); // Debugging log
+
     try {
       const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`);
 
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-      
 
-        if (response.status === 404 && retries > 0) {
-          console.log(`Retrying domain check for ${encodedDomain}...`);
-          return await checkDomainAvailability(name, retries - 1); // Retry on 404 error
+        // Retry on specific status or when retries are available
+        if ((response.status === 404 || response.status >= 500) && retries > 0) {
+          console.log(`Retrying domain check for ${encodedDomain}... (${retries} retries left)`);
+          return await checkDomainAvailability(name, retries - 1); // Retry on 404 or server errors
         }
 
-
+        return false; // Mark as unavailable if error persists or retries are exhausted
       }
 
       const data = await response.json();
       console.log('API response for domain:', data); // Debugging log
+
       if (data && typeof data.available === 'boolean') {
         console.log(`Domain ${data.domain} availability:`, data.available); // Log the actual availability value
         return data.available;
@@ -63,14 +69,13 @@ const NameGenPusher = () => {
       }
     } catch (error) {
       console.error('Error checking domain availability:', error);
-      return false; // Return false if there's an exception
 
       if (retries > 0) {
-        console.log(`Retrying domain check for ${encodedDomain} due to network error...`);
+        console.log(`Retrying domain check for ${encodedDomain} due to network error... (${retries} retries left)`);
         return await checkDomainAvailability(name, retries - 1); // Retry on network error
       }
 
-      return false; // Return false if there's an exception after retries
+      return false; // Return false if there's an exception and retries are exhausted
     }
   };
 
@@ -84,6 +89,7 @@ const NameGenPusher = () => {
     setAllChecked(true);
     console.log('Completed all domain checks.'); // Debugging log
   };
+
   useEffect(() => {
     if (content.length > 0 && !allChecked) {
       const namesToCheck = [];
@@ -94,16 +100,19 @@ const NameGenPusher = () => {
           }
         });
       });
+
       if (namesToCheck.length > 0) {
         setCheckingDomains(namesToCheck);
       }
     }
   }, [content, allChecked]);
+
   useEffect(() => {
     if (checkingDomains.length > 0 && !allChecked) {
       checkAllDomainsSequentially(checkingDomains);
     }
   }, [checkingDomains, allChecked]);
+
   return (
     <div className="vf-container">
       <h2>Generated Names</h2>
@@ -141,4 +150,5 @@ const NameGenPusher = () => {
     </div>
   );
 };
+
 export default NameGenPusher;
