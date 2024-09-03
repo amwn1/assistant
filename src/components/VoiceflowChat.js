@@ -7,7 +7,7 @@ const VoiceflowChat = () => {
     script.type = "text/javascript";
     script.onload = () => {
       window.voiceflow.chat.load({
-        verify: { projectID: process.env.VOICEFLOW_VERSION_ID },
+        verify: { projectID: "66cd6015e166995d728b65f7"},
         url: 'https://general-runtime.voiceflow.com',
         versionID: 'development'
         // render: {
