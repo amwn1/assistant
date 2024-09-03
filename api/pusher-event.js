@@ -119,7 +119,9 @@ function parseContentFromMessage(message) {
       names.push(nameMatch[1].trim());
     }
 
-    content.push({ category, names });
+    if (names.length > 0) {
+      content.push({ category, names });
+    }
   }
 
   return content;
