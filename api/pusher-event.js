@@ -36,6 +36,7 @@ export default async function handler(req, res) {
       const { message } = body;
 
       if (!message) {
+        console.log("No message provided in request body:", body);
         return res.status(400).json({ message: "Bad request, no message provided" });
       }
 
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: "Data received and content stored successfully" });
     } else if (req.method === "GET") {
       if (contentArray.length === 0) {
+        console.log("No content available for GET request");
         return res.status(404).json({ message: "No content available" });
       }
 
@@ -58,6 +60,7 @@ export default async function handler(req, res) {
 
           const apiUrl = `https://api.ote-godaddy.com/v1/domains/available?domain=${domain}&checkType=FULL&forTransfer=false`;
 
+          // Make the request to GoDaddy API
           const response = await fetch(apiUrl, {
             method: 'GET',
             headers: {
@@ -68,6 +71,7 @@ export default async function handler(req, res) {
 
           if (!response.ok) {
             const errorResponse = await response.json();
+            console.error('Error fetching domain availability:', errorResponse);
             return res.status(response.status).json({ message: errorResponse.message });
           }
 
@@ -79,15 +83,19 @@ export default async function handler(req, res) {
           // Send back a minimal response with domain name and availability status
           return res.status(200).json({ domain: data.domain, available: isAvailable });
         } catch (error) {
+          console.error("Error fetching domain availability:", error);
           return res.status(500).json({ message: "Internal Server Error" });
         }
       } else {
+        console.log("Serving content for GET request:", contentArray);
         return res.status(200).json({ content: contentArray });
       }
     } else {
+      console.log("Invalid method:", req.method);
       return res.status(405).json({ message: "Method not allowed" });
     }
   } catch (error) {
+    console.error("Unexpected error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
@@ -111,7 +119,9 @@ function parseContentFromMessage(message) {
       names.push(nameMatch[1].trim());
     }
 
-    content.push({ category, names });
+    if (names.length > 0) {
+      content.push({ category, names });
+    }
   }
 
   return content;
