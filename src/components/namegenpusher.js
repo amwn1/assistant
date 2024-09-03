@@ -47,10 +47,13 @@ const NameGenPusher = () => {
 
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-        if (response.status === 404 && retries > 0) {
-          console.log(`Retrying domain check for ${encodedDomain}...`);
-          return await checkDomainAvailability(name, retries - 1); // Retry on 404 error
+
+        // Retry on specific status or when retries are available
+        if ((response.status === 404 || response.status >= 500) && retries > 0) {
+          console.log(`Retrying domain check for ${encodedDomain}... (${retries} retries left)`);
+          return await checkDomainAvailability(name, retries - 1); // Retry on 404 or server errors
         }
+
         return false; // Mark as unavailable if error persists or retries are exhausted
       }
 
@@ -66,10 +69,12 @@ const NameGenPusher = () => {
       }
     } catch (error) {
       console.error('Error checking domain availability:', error);
+
       if (retries > 0) {
         console.log(`Retrying domain check for ${encodedDomain} due to network error... (${retries} retries left)`);
         return await checkDomainAvailability(name, retries - 1); // Retry on network error
       }
+
       return false; // Return false if there's an exception and retries are exhausted
     }
   };
@@ -95,6 +100,7 @@ const NameGenPusher = () => {
           }
         });
       });
+
       if (namesToCheck.length > 0) {
         setCheckingDomains(namesToCheck);
       }
