@@ -89,6 +89,9 @@ const NameGenPusher = () => {
     }
     setAllChecked(true);
     console.log('Completed all domain checks.'); // Debugging log
+
+    // Reload the page once all domains have been checked
+    window.location.reload();
   };
 
   useEffect(() => {
