@@ -58,7 +58,7 @@ export default async function handler(req, res) {
           const apiKey = process.env.GODADDY_API_KEY;
         const apiSecret = process.env.GODADDY_API_SECRET;
 
-          const apiUrl = `https://api.godaddy.com/v1/domains/available?domain=${domain}&checkType=FULL&forTransfer=false`;
+          const apiUrl = `https://ote-api.godaddy.com/v1/domains/available?domain=${domain}&checkType=FULL&forTransfer=false`;
 
           // Make the request to GoDaddy API
           const response = await fetch(apiUrl, {
