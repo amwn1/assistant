@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const VoiceflowChat = () => {
+const VoiceflowChat = ({ onChatEnd }) => {
   useEffect(() => {
     // Generate or retrieve unique session ID for this instance
     const sessionID = localStorage.getItem('chatSessionID') || `${new Date().getTime()}-${Math.random()}`;
@@ -11,11 +11,19 @@ const VoiceflowChat = () => {
     script.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
     script.type = "text/javascript";
     script.onload = () => {
-      window.voiceflow.chat.load({
+      const voiceflowChat = window.voiceflow.chat.load({
         verify: { projectID: "66cd6015e166995d728b65f7" },
         url: 'https://general-runtime.voiceflow.com',
         versionID: 'development',
-        sessionID: sessionID // Ensure each instance uses a unique session
+        sessionID: sessionID,
+        callbacks: {
+          onEnd: () => {
+            // Trigger the onChatEnd callback when the chat ends
+            if (typeof onChatEnd === 'function') {
+              onChatEnd();
+            }
+          },
+        },
       });
     };
     document.body.appendChild(script);
@@ -24,7 +32,7 @@ const VoiceflowChat = () => {
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [onChatEnd]);
 
   return null; // This component doesn't render anything visible
 };

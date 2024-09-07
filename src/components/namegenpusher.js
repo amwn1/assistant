@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
+import VoiceflowChat from './VoiceflowChat'; // Import VoiceflowChat
 
 const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold the categories and names
@@ -43,6 +44,13 @@ const NameGenPusher = () => {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  const handleChatEnd = () => {
+    console.log('Chat ended, clearing content...');
+    // Clear the content when the chat ends
+    setContent([]);
+    setError('Chat ended, start a new session');
+  };
 
   const checkDomainAvailability = async (name, retries = 3) => {
     const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
@@ -147,6 +155,8 @@ const NameGenPusher = () => {
           <p>No names generated</p>
         )}
       </div>
+      {/* Add VoiceflowChat component and pass handleChatEnd to clear content when the chat ends */}
+      <VoiceflowChat onChatEnd={handleChatEnd} />
     </div>
   );
 };
