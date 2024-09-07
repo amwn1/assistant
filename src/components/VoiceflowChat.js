@@ -1,40 +1,45 @@
 import { useEffect } from 'react';
 
-const VoiceflowChat = ({ onChatEnd }) => {
+const VoiceflowChat = () => {
   useEffect(() => {
-    // Generate or retrieve unique session ID for this instance
-    const sessionID = localStorage.getItem('chatSessionID') || `${new Date().getTime()}-${Math.random()}`;
-    localStorage.setItem('chatSessionID', sessionID);
-
-    // Load Voiceflow widget with unique session ID
-    const script = document.createElement('script');
-    script.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
-    script.type = "text/javascript";
-    script.onload = () => {
-      const voiceflowChat = window.voiceflow.chat.load({
-        verify: { projectID: "66cd6015e166995d728b65f7" },
-        url: 'https://general-runtime.voiceflow.com',
-        versionID: 'development',
-        sessionID: sessionID,
-        callbacks: {
-          onEnd: () => {
-            // Trigger the onChatEnd callback when the chat ends
-            if (typeof onChatEnd === 'function') {
-              onChatEnd();
+    // Check if the script has already been added to avoid duplicate loading
+    if (!document.getElementById('voiceflow-widget')) {
+      const script = document.createElement('script');
+      script.id = 'voiceflow-widget'; // Add an ID to track the script
+      script.src = "https://cdn.voiceflow.com/widget/bundle.mjs";
+      script.type = "text/javascript";
+      script.onload = () => {
+        if (!window.voiceflowWidgetInitialized) {
+          window.voiceflowWidgetInitialized = true;
+          const rootElement = document.getElementById('voiceflow-root');
+          if (rootElement) {
+            // Use ReactDOMClient.createRoot only once
+            if (!window.voiceflowRoot) {
+              window.voiceflowRoot = ReactDOM.createRoot(rootElement);
             }
-          },
-        },
-      });
-    };
-    document.body.appendChild(script);
+            // Use root.render() to update the element instead of creating it again
+            window.voiceflowRoot.render(
+              window.voiceflow.chat.load({
+                verify: { projectID: "66cd6015e166995d728b65f7" },
+                url: 'https://general-runtime.voiceflow.com',
+                versionID: 'development'
+              })
+            );
+          }
+        }
+      };
+      document.body.appendChild(script);
+    }
 
     // Clean up the script when the component is unmounted
     return () => {
-      document.body.removeChild(script);
+      if (document.getElementById('voiceflow-widget')) {
+        document.body.removeChild(document.getElementById('voiceflow-widget'));
+      }
     };
-  }, [onChatEnd]);
+  }, []);
 
-  return null; // This component doesn't render anything visible
+  return <div id="voiceflow-root"></div>; // Add a root div to ensure proper rendering
 };
 
 export default VoiceflowChat;
