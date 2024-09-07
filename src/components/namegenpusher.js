@@ -18,14 +18,12 @@ const NameGenPusher = () => {
         }
         const data = await response.json();
         console.log('Fetched content:', data.content); // Debugging log
+
         if (data.content && data.content.length > 0) {
-          setContent(prevContent => {
-            // Only update state if content has changed
-            if (JSON.stringify(prevContent) !== JSON.stringify(data.content)) {
-              return data.content;
-            }
-            return prevContent;
-          });
+          // Clear old data and set the new data
+          setContent(data.content);
+          setAvailability({}); // Reset availability when new data comes in
+          setAllChecked(false); // Reset the allChecked state
         } else {
           setError('No names generated');
         }
