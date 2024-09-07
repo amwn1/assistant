@@ -1,4 +1,3 @@
-// this one wors as well it removes the neutral or the categories which we don't need
 import { URLSearchParams } from "url";
 import fetch from "node-fetch"; // Ensure you import fetch if using in a Node.js environment
 
