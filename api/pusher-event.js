@@ -117,8 +117,8 @@ function parseContentFromMessage(message) {
   return content;
 }
 
-// Function to check domain availability with retry logic
-async function checkDomainAvailability(domain, retries = 3) {
+// Function to check domain availability
+async function checkDomainAvailability(domain) {
   try {
     const apiKey = process.env.GODADDY_API_KEY; // Replace with your GoDaddy OTE key
     const apiSecret = process.env.GODADDY_API_SECRET; // Replace with your GoDaddy OTE secret
@@ -137,26 +137,18 @@ async function checkDomainAvailability(domain, retries = 3) {
     if (!response.ok) {
       const errorResponse = await response.json();
       console.error('Error fetching domain availability:', errorResponse);
-      throw new Error(errorResponse.message);
+      return { domain, available: false, error: errorResponse.message };
     }
 
     const data = await response.json();
     return { domain: data.domain, available: data.available };
   } catch (error) {
-    console.error(`Error fetching domain availability for ${domain}. Retries left: ${retries}`, error);
-
-    if (retries > 0) {
-      // Wait for some time before retrying (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, (4 - retries) * 500)); // 500ms, 1000ms, 1500ms
-      return checkDomainAvailability(domain, retries - 1);
-    }
-
-    // After exhausting retries, return as not available
-    return { domain, available: false, error: "Failed to check domain availability after retries." };
+    console.error("Error fetching domain availability:", error);
+    return { domain, available: false, error: "Internal Server Error" };
   }
 }
 
-// Function to check all domains sequentially with retry logic
+// Function to check all domains sequentially
 async function checkAllDomainsSequentially(content) {
   const availabilityResults = [];
 
@@ -164,7 +156,7 @@ async function checkAllDomainsSequentially(content) {
   for (const section of content) {
     for (const name of section.names) {
       const formattedDomain = `${name.replace(/\s+/g, '')}.com`; // Prepare the domain for checking
-      const result = await checkDomainAvailability(formattedDomain); // Check domain availability with retries
+      const result = await checkDomainAvailability(formattedDomain); // Check domain availability
       availabilityResults.push(result); // Store the result
     }
   }
