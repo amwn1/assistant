@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import "./namegenpusher.css";
 import VoiceflowChat from './VoiceflowChat'; // Import VoiceflowChat
 
@@ -9,39 +9,45 @@ const NameGenPusher = () => {
   const [checkingDomains, setCheckingDomains] = useState([]); // State to hold domains being checked
   const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
 
-  useEffect(() => {
-    const fetchContent = async () => {
-      try {
-        const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
-        if (!response.ok) {
-          throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-        const data = await response.json();
-        console.log('Fetched content:', data.content); // Debugging log
-
-        if (data.content && data.content.length > 0) {
-          // Clear old data and set the new data
-          setContent(data.content);
-          setAvailability({}); // Reset availability when new data comes in
-          setAllChecked(false); // Reset the allChecked state
-        } else {
-          setError('No names generated');
-        }
-      } catch (error) {
-        console.error('Error fetching content:', error);
-        setError('Describe your Business to the Chatbot');
+  // Function to fetch content
+  const fetchContent = useCallback(async () => {
+    try {
+      const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
       }
-    };
+      const data = await response.json();
+      console.log('Fetched content:', data.content); // Debugging log
 
+      if (data.content && data.content.length > 0) {
+        // Update content only if it changes
+        setContent(prevContent => {
+          if (JSON.stringify(prevContent) !== JSON.stringify(data.content)) {
+            setAllChecked(false); // Reset the allChecked state
+            setAvailability({}); // Reset availability for new data
+            return data.content;
+          }
+          return prevContent; // No change, return the old state
+        });
+      } else {
+        setError('No names generated');
+      }
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setError('Describe your Business to the Chatbot');
+    }
+  }, []);
+
+  // Fetch content initially and every 5 seconds
+  useEffect(() => {
     fetchContent();
 
-    // Poll every 5 seconds for new content
     const intervalId = setInterval(() => {
       fetchContent();
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchContent]);
 
   const handleChatEnd = () => {
     console.log('Chat ended, clearing content...');
@@ -50,7 +56,8 @@ const NameGenPusher = () => {
     setError('Chat ended, start a new session');
   };
 
-  const checkDomainAvailability = async (name, retries = 3) => {
+  // Function to check domain availability
+  const checkDomainAvailability = async (name) => {
     const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
     const encodedDomain = encodeURIComponent(domainWithCom); // Properly encode the domain name
@@ -59,42 +66,20 @@ const NameGenPusher = () => {
       const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`);
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-        if (response.status === 404 && retries > 0) {
-          console.log(`Retrying domain check for ${encodedDomain}...`);
-          return await checkDomainAvailability(name, retries - 1); // Retry on 404 error
-        }
+        return false;
       }
       const data = await response.json();
-      console.log('API response for domain:', data); // Debugging log
       if (data && typeof data.available === 'boolean') {
-        console.log(`Domain ${data.domain} availability:`, data.available); // Log the actual availability value
         return data.available;
-      } else {
-        console.warn('Unexpected API response format or missing "available" key:', data);
-        return false; // Default to unavailable if response is not as expected
       }
+      return false;
     } catch (error) {
       console.error('Error checking domain availability:', error);
-      return false; // Return false if there's an exception
-      if (retries > 0) {
-        console.log(`Retrying domain check for ${encodedDomain} due to network error...`);
-        return await checkDomainAvailability(name, retries - 1); // Retry on network error
-      }
-      return false; // Return false if there's an exception after retries
+      return false;
     }
   };
 
-  const checkAllDomainsSequentially = async (names) => {
-    for (let name of names) {
-      if (!availability.hasOwnProperty(name)) {
-        const isAvailable = await checkDomainAvailability(name);
-        setAvailability(prev => ({ ...prev, [name]: isAvailable }));
-      }
-    }
-    setAllChecked(true);
-    console.log('Completed all domain checks.'); // Debugging log
-  };
-
+  // Function to sequentially check all domains after content updates
   useEffect(() => {
     if (content.length > 0 && !allChecked) {
       const namesToCheck = [];
@@ -105,17 +90,20 @@ const NameGenPusher = () => {
           }
         });
       });
-      if (namesToCheck.length > 0) {
-        setCheckingDomains(namesToCheck);
-      }
-    }
-  }, [content, allChecked]);
 
-  useEffect(() => {
-    if (checkingDomains.length > 0 && !allChecked) {
-      checkAllDomainsSequentially(checkingDomains);
+      const checkAllDomainsSequentially = async (names) => {
+        const availabilityResults = {};
+        for (let name of names) {
+          const isAvailable = await checkDomainAvailability(name);
+          availabilityResults[name] = isAvailable;
+        }
+        setAvailability(availabilityResults); // Set all results at once to minimize re-renders
+        setAllChecked(true);
+      };
+
+      checkAllDomainsSequentially(namesToCheck);
     }
-  }, [checkingDomains, allChecked]);
+  }, [content, availability, allChecked]);
 
   return (
     <div className="vf-container">
@@ -124,7 +112,6 @@ const NameGenPusher = () => {
       <div className="response-box">
         {content.length > 0 ? (
           content
-            .filter(section => section.names.some(name => availability[name] !== undefined)) // Filter out categories with no available names
             .map((section, index) => (
               <div key={index}>
                 <h3>{section.category}</h3>
