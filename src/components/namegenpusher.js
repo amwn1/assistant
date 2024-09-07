@@ -7,6 +7,7 @@ const NameGenPusher = () => {
   const [availability, setAvailability] = useState({}); // State to hold domain availability
   const [checkingDomains, setCheckingDomains] = useState([]); // State to hold domains being checked
   const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
+
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -17,7 +18,13 @@ const NameGenPusher = () => {
         const data = await response.json();
         console.log('Fetched content:', data.content); // Debugging log
         if (data.content && data.content.length > 0) {
-          setContent(data.content);
+          setContent(prevContent => {
+            // Only update state if content has changed
+            if (JSON.stringify(prevContent) !== JSON.stringify(data.content)) {
+              return data.content;
+            }
+            return prevContent;
+          });
         } else {
           setError('No names generated');
         }
@@ -26,12 +33,17 @@ const NameGenPusher = () => {
         setError('Describe your Business to the Chatbot');
       }
     };
+
     fetchContent();
+
+    // Poll every 5 seconds for new content
     const intervalId = setInterval(() => {
       fetchContent();
     }, 5000);
+
     return () => clearInterval(intervalId);
   }, []);
+
   const checkDomainAvailability = async (name, retries = 3) => {
     const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
     const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
@@ -65,6 +77,7 @@ const NameGenPusher = () => {
       return false; // Return false if there's an exception after retries
     }
   };
+
   const checkAllDomainsSequentially = async (names) => {
     for (let name of names) {
       if (!availability.hasOwnProperty(name)) {
@@ -75,6 +88,7 @@ const NameGenPusher = () => {
     setAllChecked(true);
     console.log('Completed all domain checks.'); // Debugging log
   };
+
   useEffect(() => {
     if (content.length > 0 && !allChecked) {
       const namesToCheck = [];
@@ -90,11 +104,13 @@ const NameGenPusher = () => {
       }
     }
   }, [content, allChecked]);
+
   useEffect(() => {
     if (checkingDomains.length > 0 && !allChecked) {
       checkAllDomainsSequentially(checkingDomains);
     }
   }, [checkingDomains, allChecked]);
+
   return (
     <div className="vf-container">
       <h2>Generated Names</h2>
@@ -134,4 +150,5 @@ const NameGenPusher = () => {
     </div>
   );
 };
+
 export default NameGenPusher;
