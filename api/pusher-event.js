@@ -1,4 +1,3 @@
-// this one wors as well it removes the neutral or the categories which we don't need
 import { URLSearchParams } from "url";
 import fetch from "node-fetch"; // Ensure you import fetch if using in a Node.js environment
 
@@ -7,9 +6,9 @@ let contentArray = [];
 
 export default async function handler(req, res) {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "https://thenameexperts.com");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow from any origin for testing
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   // Handle preflight request (OPTIONS)
   if (req.method === "OPTIONS") {
@@ -87,37 +86,21 @@ export default async function handler(req, res) {
         console.log("Serving content for GET request:", contentArray);
         return res.status(200).json({ content: contentArray });
       }
-    } else {
-      console.log("Invalid method:", req.method);
-      return res.status(405).json({ message: "Method not allowed" });
     }
   } catch (error) {
     console.error("Unexpected error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
-// Function to parse content (categories and names) from the incoming message
+// Helper function to parse the content from the Voiceflow message
 function parseContentFromMessage(message) {
-  const content = [];
-  const categoryRegex = /### (.*?)\n/g;
-  const nameRegex = /- \[([^\]]+)\]\(#\)/g;
-
-  let categoryMatch;
-  while ((categoryMatch = categoryRegex.exec(message)) !== null) {
-    const category = categoryMatch[1].trim();
-    const names = [];
-
-    let nameMatch;
-    while ((nameMatch = nameRegex.exec(message)) !== null) {
-      if (nameRegex.lastIndex > categoryRegex.lastIndex && categoryRegex.lastIndex !== 0) {
-        break;
-      }
-      names.push(nameMatch[1].trim());
-    }
-
-    content.push({ category, names });
-  }
-
+  const sections = message.split('\n\n');
+  const content = sections.map(section => {
+    const lines = section.split('\n');
+    const category = lines[0];
+    const names = lines.slice(1).map(name => name.trim());
+    return { category, names };
+  });
   return content;
 }

@@ -1,4 +1,3 @@
-// this one wors as well it removes the neutral or the categories which we don't need
 import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
 
@@ -42,7 +41,12 @@ const NameGenPusher = () => {
     const encodedDomain = encodeURIComponent(domainWithCom); // Properly encode the domain name
     console.log('Checking domain:', encodedDomain); // Debugging log
     try {
-      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`);
+      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',  // Only if necessary
+        }
+      });
 
       if (!response.ok) {
         console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
@@ -64,11 +68,6 @@ const NameGenPusher = () => {
     } catch (error) {
       console.error('Error checking domain availability:', error);
       return false; // Return false if there's an exception
-      if (retries > 0) {
-        console.log(`Retrying domain check for ${encodedDomain} due to network error...`);
-        return await checkDomainAvailability(name, retries - 1); // Retry on network error
-      }
-      return false; // Return false if there's an exception after retries
     }
   };
 
