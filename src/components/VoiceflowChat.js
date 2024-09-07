@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import ReactDOM from 'react-dom/client'; // Add this import
 
 const VoiceflowChat = () => {
   useEffect(() => {
