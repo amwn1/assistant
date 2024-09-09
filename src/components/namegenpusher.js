@@ -1,15 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import "./namegenpusher.css";
-import VoiceflowChat from './VoiceflowChat'; // Import VoiceflowChat
+import "./namegenpusher.css"; // Ensure your CSS is loaded properly
 
 const NameGenPusher = () => {
-  const [content, setContent] = useState([]); // State to hold the categories and names
+  const [content, setContent] = useState([]); // State to hold fetched and filtered names
+  const [filteredContent, setFilteredContent] = useState([]); // State to hold filtered content
   const [error, setError] = useState('');
-  const [availability, setAvailability] = useState({}); // State to hold domain availability
-  const [loading, setLoading] = useState(false); // State to track if domains are being checked
-  const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
 
-  // Function to fetch content at a throttled rate
+  // Function to fetch content and store it in state
   const fetchContent = useCallback(async () => {
     try {
       const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
@@ -17,13 +14,13 @@ const NameGenPusher = () => {
         throw new Error(`Network response was not ok: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log('Fetched content:', data); // Log the fetched data for debugging
+      console.log('Fetched content:', data.content); // Log the fetched data for debugging
 
       if (data.content && data.content.length > 0) {
-        setContent(data.content);
-        setAllChecked(false); // Reset the allChecked state for new content
-        setAvailability({}); // Reset availability for new data
+        setContent(data.content); // Store fetched data in the content state
+        filterContent(data.content); // Filter the content immediately
       } else {
+        setContent([]); // Clear content if no names are generated
         setError('No names generated');
       }
     } catch (error) {
@@ -32,132 +29,30 @@ const NameGenPusher = () => {
     }
   }, []);
 
-  // Fetch content periodically every 10 seconds
+  // Function to filter content (adjust the filtering logic as needed)
+  const filterContent = (contentArray) => {
+    // Example filtering logic (modify as per your needs)
+    const filtered = contentArray.filter(section => section.category !== 'Neutral'); // Example: filtering out 'Neutral' category
+    setFilteredContent(filtered); // Update the filtered content state
+  };
+
+  // Fetch content once when the component mounts
   useEffect(() => {
-    fetchContent(); // Fetch immediately on component mount
-
-    const intervalId = setInterval(() => {
-      fetchContent(); // Fetch content periodically
-      console.log("Fetching new content every 10 seconds");
-    }, 10000); // 10 seconds interval
-
-    return () => clearInterval(intervalId); // Clear interval on component unmount
+    fetchContent();
   }, [fetchContent]);
-
-  const handleChatEnd = () => {
-    console.log('Chat ended, clearing content...');
-    // Clear the content when the chat ends
-    setContent([]);
-    setError('Chat ended, start a new session');
-  };
-
-  // Function to check domain availability
-  const checkDomainAvailability = async (name) => {
-    const formattedDomain = name.trim().replace(/\s+/g, ''); // Remove spaces entirely
-    const domainWithCom = `${formattedDomain}.com`; // Append .com to each domain name
-    const encodedDomain = encodeURIComponent(domainWithCom); // Properly encode the domain name
-    console.log('Checking domain:', encodedDomain); // Debugging log
-    try {
-      const response = await fetch(`https://assistant-weld.vercel.app/api/pusher-event?domain=${encodedDomain}`);
-      if (!response.ok) {
-        console.error(`Error fetching domain availability: ${response.status} ${response.statusText}`);
-        setError(`Error checking domain: ${response.status} ${response.statusText}`);
-        return false;
-      }
-      const data = await response.json();
-      if (data && typeof data.available === 'boolean') {
-        return data.available;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error checking domain availability:', error);
-      setError('Error checking domain availability');
-      return false;
-    }
-  };
-
-  // Function to check all domains in batches
-  const BATCH_SIZE = 5; // Number of domains to check at a time
-  const BATCH_DELAY = 2000; // 2 seconds delay between batches
-
-  const checkAllDomainsInBatches = async (names) => {
-    setLoading(true); // Set loading to true
-    let availabilityResults = {};
-
-    for (let i = 0; i < names.length; i += BATCH_SIZE) {
-      const batch = names.slice(i, i + BATCH_SIZE);
-
-      // Process each batch
-      const batchResults = await Promise.all(
-        batch.map(async (name) => {
-          const isAvailable = await checkDomainAvailability(name);
-          return { name, isAvailable };
-        })
-      );
-
-      // Merge batch results with the existing results
-      availabilityResults = batchResults.reduce((acc, { name, isAvailable }) => {
-        acc[name] = isAvailable;
-        return acc;
-      }, availabilityResults);
-
-      setAvailability((prevAvailability) => ({
-        ...prevAvailability,
-        ...availabilityResults,
-      }));
-
-      // Delay before processing the next batch
-      if (i + BATCH_SIZE < names.length) {
-        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
-      }
-    }
-
-    setLoading(false); // Set loading to false after checking
-    setAllChecked(true);
-  };
-
-  // Sequentially check all domains after content updates
-  useEffect(() => {
-    if (content.length > 0 && !allChecked) {
-      const namesToCheck = [];
-      content.forEach(section => {
-        section.names.forEach(name => {
-          if (!availability.hasOwnProperty(name)) {
-            namesToCheck.push(name);
-          }
-        });
-      });
-      if (namesToCheck.length > 0) {
-        checkAllDomainsInBatches(namesToCheck);
-      }
-    }
-  }, [content, availability, allChecked]);
 
   return (
     <div className="vf-container">
       <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
-      {loading && <p>Checking domain availability...</p>} {/* Show loading message */}
       <div className="response-box">
-        {content.length > 0 ? (
-          content.map((section, index) => (
+        {filteredContent.length > 0 ? (
+          filteredContent.map((section, index) => (
             <div key={index}>
               <h3>{section.category}</h3>
               {section.names.length > 0 ? (
                 section.names.map((name, nameIndex) => (
-                  <div key={nameIndex}>
-                    <a
-                      href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(name.trim().replace(/\s+/g, ''))}.com`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={availability[name] ? 'available' : 'not-available'} // Apply class based on availability
-                    >
-                      {name}
-                    </a>
-                    <span style={{ marginLeft: '10px', color: availability[name] ? 'green' : 'red', fontWeight: 'bold' }}>
-                      {availability[name] ? 'A' : 'NA'}
-                    </span>
-                  </div>
+                  <div key={nameIndex} className="name-item">{name}</div>
                 ))
               ) : (
                 <p>No names available for this category</p>
@@ -165,11 +60,9 @@ const NameGenPusher = () => {
             </div>
           ))
         ) : (
-          <p>No names generated</p>
+          <p>No names generated</p> // This will keep the box empty if no names are generated
         )}
       </div>
-      {/* Add VoiceflowChat component and pass handleChatEnd to clear content when the chat ends */}
-      <VoiceflowChat onChatEnd={handleChatEnd} />
     </div>
   );
 };
