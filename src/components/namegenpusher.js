@@ -20,15 +20,10 @@ const NameGenPusher = () => {
       console.log('Fetched content:', data.content); // Debugging log
 
       if (data.content && data.content.length > 0) {
-        // Update content only if it changes
-        setContent(prevContent => {
-          if (JSON.stringify(prevContent) !== JSON.stringify(data.content)) {
-            setAllChecked(false); // Reset the allChecked state
-            setAvailability({}); // Reset availability for new data
-            return data.content;
-          }
-          return prevContent; // No change, return the old state
-        });
+        // Immediately update the content and reset states for new data
+        setContent(data.content);
+        setAllChecked(false); // Reset the allChecked state
+        setAvailability({}); // Reset availability for new data
       } else {
         setError('No names generated');
       }
@@ -116,17 +111,14 @@ const NameGenPusher = () => {
     }
   }, [content, availability, allChecked]);
 
-  // Filter and display Neutral category
-  const neutralNames = content.filter(section => section.category === "Neutral");
-
   return (
     <div className="vf-container">
       <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       {loading && <p>Checking domain availability...</p>} {/* Show loading message */}
       <div className="response-box">
-        {neutralNames.length > 0 ? (
-          neutralNames.map((section, index) => (
+        {content.length > 0 ? (
+          content.map((section, index) => (
             <div key={index}>
               <h3>{section.category}</h3>
               {section.names.length > 0 ? (
