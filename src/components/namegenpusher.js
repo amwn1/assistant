@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import "./namegenpusher.css";
 
 const NameGenPusher = () => {
-  const [content, setContent] = useState([]); // State to hold fetched and filtered names
+  const [content, setContent] = useState([]); // State to hold fetched names
   const [error, setError] = useState('');
 
   // Function to fetch content and store it in state
@@ -17,7 +17,6 @@ const NameGenPusher = () => {
 
       if (data.content && data.content.length > 0) {
         setContent(data.content); // Store fetched data in the content state
-        filterContent(data.content); // Filter the content immediately
       } else {
         setContent([]); // Clear content if no names are generated
         setError('No names generated');
@@ -27,12 +26,6 @@ const NameGenPusher = () => {
       setError('Describe your Business to the Chatbot');
     }
   }, []);
-
-  // Function to filter content and include the 'Neutral' category
-  const filterContent = (contentArray) => {
-    const filtered = contentArray; // Include all categories, including 'Neutral'
-    setFilteredContent(filtered); // Update the filtered content state
-  };
 
   // Fetch content once when the component mounts
   useEffect(() => {
