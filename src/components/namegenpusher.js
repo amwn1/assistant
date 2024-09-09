@@ -8,25 +8,21 @@ const NameGenPusher = () => {
   const [availability, setAvailability] = useState({}); // State to hold domain availability
   const [loading, setLoading] = useState(false); // State to track if domains are being checked
   const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
-  const [isFetched, setIsFetched] = useState(false); // New state to track if content is already fetched
 
-  // Function to fetch content only once
-  const fetchContentOnce = useCallback(async () => {
-    if (isFetched) return; // Skip if already fetched
-
+  // Function to fetch content at a throttled rate
+  const fetchContent = useCallback(async () => {
     try {
       const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
       if (!response.ok) {
         throw new Error(`Network response was not ok: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log('Fetched content:', data.content); // Debugging log
+      console.log('Fetched content:', data); // Log the fetched data for debugging
 
       if (data.content && data.content.length > 0) {
         setContent(data.content);
-        setAllChecked(false); // Reset the allChecked state
+        setAllChecked(false); // Reset the allChecked state for new content
         setAvailability({}); // Reset availability for new data
-        setIsFetched(true); // Mark the content as fetched
       } else {
         setError('No names generated');
       }
@@ -34,19 +30,25 @@ const NameGenPusher = () => {
       console.error('Error fetching content:', error);
       setError('Describe your Business to the Chatbot');
     }
-  }, [isFetched]);
+  }, []);
 
-  // Fetch content only once after the component mounts
+  // Fetch content periodically every 10 seconds
   useEffect(() => {
-    fetchContentOnce();
-  }, [fetchContentOnce]);
+    fetchContent(); // Fetch immediately on component mount
+
+    const intervalId = setInterval(() => {
+      fetchContent(); // Fetch content periodically
+      console.log("Fetching new content every 10 seconds");
+    }, 10000); // 10 seconds interval
+
+    return () => clearInterval(intervalId); // Clear interval on component unmount
+  }, [fetchContent]);
 
   const handleChatEnd = () => {
     console.log('Chat ended, clearing content...');
     // Clear the content when the chat ends
     setContent([]);
     setError('Chat ended, start a new session');
-    setIsFetched(false); // Allow fetching again if the chat restarts
   };
 
   // Function to check domain availability
