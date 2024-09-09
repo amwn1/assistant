@@ -52,11 +52,16 @@ export default async function handler(req, res) {
       // Parse and store content (categories and names) in the contentArray
       contentArray = parseContentFromMessage(message);
 
-      // After names are parsed, check domain availability for each name sequentially
-      const availabilityResults = await checkAllDomainsSequentially(contentArray);
+      // Immediately send the response so the client can render the new names
+      res.status(200).json({ message: "Data received and content stored successfully", contentArray });
+
+      // After names are parsed, check domain availability for each name concurrently with limited concurrency
+      const availabilityResults = await checkAllDomainsConcurrently(contentArray);
+
+      // Optionally, you can store the availabilityResults for later use or update the client via a different mechanism (e.g., WebSocket, polling).
+      console.log("Domain availability results:", availabilityResults);
 
       isProcessing = false; // Release the lock
-      return res.status(200).json({ message: "Data received and processed", availabilityResults });
     } else if (req.method === "GET") {
       if (contentArray.length === 0) {
         console.log("No content available for GET request");
@@ -117,8 +122,8 @@ function parseContentFromMessage(message) {
   return content;
 }
 
-// Function to check domain availability
-async function checkDomainAvailability(domain) {
+// Function to check domain availability with retry logic
+async function checkDomainAvailability(domain, retries = 3) {
   try {
     const apiKey = process.env.GODADDY_API_KEY; // Replace with your GoDaddy OTE key
     const apiSecret = process.env.GODADDY_API_SECRET; // Replace with your GoDaddy OTE secret
@@ -137,29 +142,50 @@ async function checkDomainAvailability(domain) {
     if (!response.ok) {
       const errorResponse = await response.json();
       console.error('Error fetching domain availability:', errorResponse);
-      return { domain, available: false, error: errorResponse.message };
+      throw new Error(errorResponse.message);
     }
 
     const data = await response.json();
     return { domain: data.domain, available: data.available };
   } catch (error) {
-    console.error("Error fetching domain availability:", error);
-    return { domain, available: false, error: "Internal Server Error" };
+    console.error(`Error fetching domain availability for ${domain}. Retries left: ${retries}`, error);
+
+    if (retries > 0) {
+      // Wait for some time before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, (4 - retries) * 500)); // 500ms, 1000ms, 1500ms
+      return checkDomainAvailability(domain, retries - 1);
+    }
+
+    // After exhausting retries, return as not available
+    return { domain, available: false, error: "Failed to check domain availability after retries." };
   }
 }
 
-// Function to check all domains sequentially
-async function checkAllDomainsSequentially(content) {
+// Function to check all domains concurrently with limited concurrency
+async function checkAllDomainsConcurrently(content, concurrencyLimit = 5) {
   const availabilityResults = [];
+  const promises = [];
+  
+  // A simple concurrency control implementation
+  const semaphore = new Array(concurrencyLimit).fill(Promise.resolve());
 
-  // Iterate through each category and its names
+  const checkDomain = async (name) => {
+    const formattedDomain = `${name.replace(/\s+/g, '')}.com`;
+    const result = await checkDomainAvailability(formattedDomain);
+    availabilityResults.push(result);
+  };
+
   for (const section of content) {
     for (const name of section.names) {
-      const formattedDomain = `${name.replace(/\s+/g, '')}.com`; // Prepare the domain for checking
-      const result = await checkDomainAvailability(formattedDomain); // Check domain availability
-      availabilityResults.push(result); // Store the result
+      const next = semaphore.shift(); // Get the next available "slot"
+      const promise = next.then(() => checkDomain(name)); // Perform the domain check
+      promises.push(promise); // Keep track of the promise
+      semaphore.push(promise); // Add it back to the semaphore
     }
   }
+
+  // Wait for all the promises to complete
+  await Promise.all(promises);
 
   return availabilityResults;
 }
