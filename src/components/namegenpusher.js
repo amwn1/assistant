@@ -19,7 +19,7 @@ const NameGenPusher = () => {
         setContent(data.content); // Store fetched data in the content state
       } else {
         setContent([]); // Clear content if no names are generated
-        setError('No names generated');
+        setError(''); // Clear the error to ensure an empty box
       }
     } catch (error) {
       console.error('Error fetching content:', error);
@@ -38,20 +38,22 @@ const NameGenPusher = () => {
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       <div className="response-box">
         {content.length > 0 ? (
-          content.map((section, index) => (
-            <div key={index}>
-              <h3>{section.category}</h3>
-              {section.names.length > 0 ? (
-                section.names.map((name, nameIndex) => (
-                  <div key={nameIndex} className="name-item">{name}</div>
-                ))
-              ) : (
-                <p>No names available for this category</p>
-              )}
-            </div>
-          ))
+          content
+            .filter(section => section.category !== 'Neutral' || section.names.length > 0) // Remove 'Neutral' if no names
+            .map((section, index) => (
+              <div key={index}>
+                <h3>{section.category}</h3>
+                {section.names.length > 0 ? (
+                  section.names.map((name, nameIndex) => (
+                    <div key={nameIndex} className="name-item">{name}</div>
+                  ))
+                ) : (
+                  <p>No names available for this category</p>
+                )}
+              </div>
+            ))
         ) : (
-          <p>No names generated</p> // This will keep the box empty if no names are generated
+          null // Empty box if no names are generated
         )}
       </div>
     </div>
