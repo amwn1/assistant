@@ -8,9 +8,12 @@ const NameGenPusher = () => {
   const [availability, setAvailability] = useState({}); // State to hold domain availability
   const [loading, setLoading] = useState(false); // State to track if domains are being checked
   const [allChecked, setAllChecked] = useState(false); // State to track if all domains are checked
+  const [isFetched, setIsFetched] = useState(false); // New state to track if content is already fetched
 
-  // Function to fetch content
-  const fetchContent = useCallback(async () => {
+  // Function to fetch content only once
+  const fetchContentOnce = useCallback(async () => {
+    if (isFetched) return; // Skip if already fetched
+
     try {
       const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
       if (!response.ok) {
@@ -20,10 +23,10 @@ const NameGenPusher = () => {
       console.log('Fetched content:', data.content); // Debugging log
 
       if (data.content && data.content.length > 0) {
-        // Immediately update the content and reset states for new data
         setContent(data.content);
         setAllChecked(false); // Reset the allChecked state
         setAvailability({}); // Reset availability for new data
+        setIsFetched(true); // Mark the content as fetched
       } else {
         setError('No names generated');
       }
@@ -31,24 +34,19 @@ const NameGenPusher = () => {
       console.error('Error fetching content:', error);
       setError('Describe your Business to the Chatbot');
     }
-  }, []);
+  }, [isFetched]);
 
-  // Fetch content initially and every 5 seconds
+  // Fetch content only once after the component mounts
   useEffect(() => {
-    fetchContent();
-
-    const intervalId = setInterval(() => {
-      fetchContent();
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [fetchContent]);
+    fetchContentOnce();
+  }, [fetchContentOnce]);
 
   const handleChatEnd = () => {
     console.log('Chat ended, clearing content...');
     // Clear the content when the chat ends
     setContent([]);
     setError('Chat ended, start a new session');
+    setIsFetched(false); // Allow fetching again if the chat restarts
   };
 
   // Function to check domain availability
@@ -76,20 +74,42 @@ const NameGenPusher = () => {
     }
   };
 
-  // Function to check all domains concurrently
-  const checkAllDomainsConcurrently = async (names) => {
+  // Function to check all domains in batches
+  const BATCH_SIZE = 5; // Number of domains to check at a time
+  const BATCH_DELAY = 2000; // 2 seconds delay between batches
+
+  const checkAllDomainsInBatches = async (names) => {
     setLoading(true); // Set loading to true
-    const availabilityResults = await Promise.all(
-      names.map(async (name) => {
-        const isAvailable = await checkDomainAvailability(name);
-        return { name, isAvailable };
-      })
-    );
-    const resultObj = availabilityResults.reduce((acc, { name, isAvailable }) => {
-      acc[name] = isAvailable;
-      return acc;
-    }, {});
-    setAvailability(resultObj); // Set availability for all at once
+    let availabilityResults = {};
+
+    for (let i = 0; i < names.length; i += BATCH_SIZE) {
+      const batch = names.slice(i, i + BATCH_SIZE);
+
+      // Process each batch
+      const batchResults = await Promise.all(
+        batch.map(async (name) => {
+          const isAvailable = await checkDomainAvailability(name);
+          return { name, isAvailable };
+        })
+      );
+
+      // Merge batch results with the existing results
+      availabilityResults = batchResults.reduce((acc, { name, isAvailable }) => {
+        acc[name] = isAvailable;
+        return acc;
+      }, availabilityResults);
+
+      setAvailability((prevAvailability) => ({
+        ...prevAvailability,
+        ...availabilityResults,
+      }));
+
+      // Delay before processing the next batch
+      if (i + BATCH_SIZE < names.length) {
+        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
+      }
+    }
+
     setLoading(false); // Set loading to false after checking
     setAllChecked(true);
   };
@@ -106,7 +126,7 @@ const NameGenPusher = () => {
         });
       });
       if (namesToCheck.length > 0) {
-        checkAllDomainsConcurrently(namesToCheck);
+        checkAllDomainsInBatches(namesToCheck);
       }
     }
   }, [content, availability, allChecked]);
