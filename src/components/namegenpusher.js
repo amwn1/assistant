@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import "./namegenpusher.css"; // Ensure your CSS is loaded properly
+import "./namegenpusher.css";
 
 const NameGenPusher = () => {
   const [content, setContent] = useState([]); // State to hold fetched and filtered names
-  const [filteredContent, setFilteredContent] = useState([]); // State to hold filtered content
   const [error, setError] = useState('');
 
   // Function to fetch content and store it in state
@@ -29,10 +28,9 @@ const NameGenPusher = () => {
     }
   }, []);
 
-  // Function to filter content (adjust the filtering logic as needed)
+  // Function to filter content and include the 'Neutral' category
   const filterContent = (contentArray) => {
-    // Example filtering logic (modify as per your needs)
-    const filtered = contentArray.filter(section => section.category !== 'Neutral'); // Example: filtering out 'Neutral' category
+    const filtered = contentArray; // Include all categories, including 'Neutral'
     setFilteredContent(filtered); // Update the filtered content state
   };
 
@@ -46,8 +44,8 @@ const NameGenPusher = () => {
       <h2>Generated Names</h2>
       {error && <p style={{ color: 'cyan' }}>{error}</p>}
       <div className="response-box">
-        {filteredContent.length > 0 ? (
-          filteredContent.map((section, index) => (
+        {content.length > 0 ? (
+          content.map((section, index) => (
             <div key={index}>
               <h3>{section.category}</h3>
               {section.names.length > 0 ? (
