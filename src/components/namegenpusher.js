@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import "./namegenpusher.css";
 
 const NameGenPusher = () => {
@@ -6,7 +6,7 @@ const NameGenPusher = () => {
   const [error, setError] = useState('');
 
   // Function to fetch content and store it in state
-  const fetchContent = useCallback(async () => {
+  const fetchContent = async () => {
     try {
       const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
       if (!response.ok) {
@@ -19,18 +19,20 @@ const NameGenPusher = () => {
         setContent(data.content); // Store fetched data in the content state
       } else {
         setContent([]); // Clear content if no names are generated
-        setError(''); // Clear the error to ensure an empty box
+        setError(''); // Clear error to keep box empty
       }
     } catch (error) {
       console.error('Error fetching content:', error);
       setError('Describe your Business to the Chatbot');
     }
-  }, []);
+  };
 
-  // Fetch content once when the component mounts
+  // Use polling to fetch content regularly (every 5 seconds)
   useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
+    const intervalId = setInterval(fetchContent, 5000); // Fetch new data every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on unmount
+  }, []);
 
   return (
     <div className="vf-container">
