@@ -54,3 +54,5 @@ const VoiceflowChat = () => {
 };
 
 export default VoiceflowChat;
+
+// CHECKPOINT FOR THE CODE

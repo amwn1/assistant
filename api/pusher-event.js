@@ -1,3 +1,4 @@
+// NOTE : CHECKPOINT FOR THE CODE
 import { URLSearchParams } from "url";
 
 let contentArray = []; // Temporary in-memory storage for categories and names
