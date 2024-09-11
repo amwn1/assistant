@@ -4,7 +4,7 @@ let contentArray = []; // Temporary in-memory storage for categories and names
 
 export default async function handler(req, res) {
   // Set CORS headers to allow requests from your app domain
-  res.setHeader("Access-Control-Allow-Origin", "https://thenameexperts.com"); 
+  res.setHeader("Access-Control-Allow-Origin", "https://thenameexperts.com");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -54,7 +54,11 @@ export default async function handler(req, res) {
       // Log the content when a GET request is made
       console.log('Serving content for GET request:', contentArray);
 
-      return res.status(200).json({ content: contentArray });
+      // Send the content and then clear it
+      const responseContent = [...contentArray]; // Copy the content to send
+      contentArray = []; // Clear the content after sending
+
+      return res.status(200).json({ content: responseContent });
     } else {
       console.log("Invalid method:", req.method);
       return res.status(405).json({ message: "Method not allowed" });
