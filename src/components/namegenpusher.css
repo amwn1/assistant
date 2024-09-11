@@ -64,40 +64,15 @@ li {
   list-style-type: none;
 }
 
-/* Style the links inside the response box for available domains */
-.available, .not-available {
-  color: black !important;
-  font-weight: bold;
-  text-decoration: none !important;
-  position: relative;
-  display: inline-block;
-  padding-bottom: 2px;
+/* Custom link styling */
+.custom-link {
+  color: inherit; /* Inherit the current text color */
+  text-decoration: none; /* Remove the underline */
+  font-weight: bold; /* Keep the bold style */
 }
 
-/* Create the underline effect for available names */
-.available::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: black;
-  transform: scaleX(0);
-  transform-origin: bottom right;
-  transition: transform 0.3s ease-out;
-}
-
-/* Add hover effect for available names */
-.available:hover::after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
-  transition: transform 0.2s ease-in;
-}
-
-/* Faster ease-out transition for underline on mouse-out */
-.available::after {
-  transition: transform 0.1s ease-out;
+.custom-link:hover {
+  text-decoration: underline; /* Add underline on hover */
 }
 
 /* Make headings in the response box uppercase */
