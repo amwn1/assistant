@@ -5,10 +5,8 @@ import "./namegenpusher.css";
 const NameGenPusher = () => {
   const [content, setContent] = useState([]);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const fetchContent = async () => {
-    setLoading(true);
     setError('');
     try {
       const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
@@ -18,7 +16,7 @@ const NameGenPusher = () => {
       const data = await response.json();
       console.log('Fetched content:', data.content);
 
-      if (data.content && data.content.length > 0) {
+      if (Array.isArray(data.content) && data.content.length > 0) {
         setContent(data.content);
       } else {
         setContent([]);
@@ -27,8 +25,6 @@ const NameGenPusher = () => {
     } catch (error) {
       console.error('Error fetching content:', error);
       setError('Error fetching names. Please try again later.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -49,8 +45,7 @@ const NameGenPusher = () => {
   return (
     <div className="vf-container">
       <h2 id="generated-names-title">Generated Names</h2>
-      {error && <p className="error-message" role="alert" aria-live="assertive">{error}</p>}
-      {loading && <p className="loading-message" role="status" aria-live="polite">Generating names...</p>}
+      {error && <p className="error-message">{error}</p>}
       <div className="response-box" aria-labelledby="generated-names-title">
         {filteredContent.map((section, index) => (
           <div key={index}>

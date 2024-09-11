@@ -54,6 +54,16 @@ h2 {
   cursor: pointer;
 }
 
+/* Remove bullet points from the list */
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  list-style-type: none;
+}
+
 /* Style the links inside the response box for available domains */
 .available, .not-available {
   color: black !important;
