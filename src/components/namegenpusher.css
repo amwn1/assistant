@@ -67,21 +67,27 @@ li {
 /* Custom link styling */
 .custom-link {
   color: inherit; /* Inherit the current text color */
-  text-decoration: none; /* Remove the underline */
+  text-decoration: none; /* Remove the default underline */
   font-weight: bold; /* Keep the bold style */
+  position: relative; /* Required for the pseudo-element */
+  display: inline-block; /* Ensure the link behaves like an inline-block element */
+  padding-bottom: 2px; /* Add some space for the underline */
 }
 
-.custom-link:hover {
-  text-decoration: underline; /* Add underline on hover */
+/* Create the animated underline effect */
+.custom-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: black; /* The color of the underline */
+  transition: width 0.3s ease-in-out; /* Animate the width */
 }
 
-/* Make headings in the response box uppercase */
-.response-box h3 {
-  text-transform: uppercase;
-  color: black;
-  font-weight: bold;
-  margin-top: 20px;
-  margin-bottom: 10px;
+.custom-link:hover::after {
+  width: 100%; /* Expand the underline from left to right */
 }
 
 /* Media Queries for different screen sizes */
