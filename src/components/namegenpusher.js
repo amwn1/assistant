@@ -1,13 +1,10 @@
-// namegenpusher.js
 import React, { useEffect, useState, useMemo } from 'react';
 import "./namegenpusher.css";
 
 const NameGenPusher = () => {
   const [content, setContent] = useState([]);
-  const [error, setError] = useState('');
 
   const fetchContent = async () => {
-    setError('');
     try {
       const response = await fetch('https://assistant-weld.vercel.app/api/pusher-event');
       if (!response.ok) {
@@ -20,11 +17,10 @@ const NameGenPusher = () => {
         setContent(data.content);
       } else {
         setContent([]);
-        setError('No names generated. Describe your Business to the Chatbot');
       }
     } catch (error) {
       console.error('Error fetching content:', error);
-      setError('Error fetching names. Please try again later.');
+      // No error message will be shown in the UI
     }
   };
 
@@ -45,7 +41,6 @@ const NameGenPusher = () => {
   return (
     <div className="vf-container">
       <h2 id="generated-names-title">Generated Names</h2>
-      {error && <p className="error-message">{error}</p>}
       <div className="response-box" aria-labelledby="generated-names-title">
         {filteredContent.map((section, index) => (
           <div key={index}>

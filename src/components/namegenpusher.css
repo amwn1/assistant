@@ -120,3 +120,22 @@ li {
     max-width: 95%; /* Increase width on smaller screens */
   }
 }
+
+@media (max-width: 480px) {
+  h2 {
+    font-size: 1.2em;
+  }
+
+  .response-box {
+    padding: 0.75rem; /* Further reduce padding on very small screens */
+    max-width: 100%; /* Use full width on very small screens */
+  }
+
+  .response-box h3 {
+    font-size: 1em; /* Reduce heading size on small screens */
+  }
+
+  .name-item {
+    font-size: 0.9em; /* Reduce name item size on small screens */
+  }
+}
