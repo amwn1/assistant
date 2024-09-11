@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client'; // Add this import
 
 const VoiceflowChat = () => {
   useEffect(() => {
+    // Function to clear session data (localStorage)
+    const clearSessionData = () => {
+      // Clear the chatSessionID from localStorage
+      localStorage.removeItem('chatSessionID');
+    };
+
     // Check if the script has already been added to avoid duplicate loading
     if (!document.getElementById('voiceflow-widget')) {
       const script = document.createElement('script');
@@ -12,6 +18,10 @@ const VoiceflowChat = () => {
       script.onload = () => {
         if (!window.voiceflowWidgetInitialized) {
           window.voiceflowWidgetInitialized = true;
+
+          // Clear session data before initializing the widget
+          clearSessionData();
+
           const rootElement = document.getElementById('voiceflow-root');
           if (rootElement) {
             // Use ReactDOMClient.createRoot only once
