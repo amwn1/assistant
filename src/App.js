@@ -9,7 +9,6 @@ function App() {
   return (
     <div id="flat-chat" className="App">
       {/* <VfNameGenerator /> */}
-      <TestGoogleLink />
       <NameGenPusher/>
       <VoiceflowChat />
     </div>
