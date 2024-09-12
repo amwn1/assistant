@@ -36,7 +36,16 @@ const NameGenPusher = () => {
   useEffect(() => {
     // Fetch content only after the session ID is set
     if (sessionId) {
+      // Fetch content immediately on component mount
       fetchContent();
+
+      // Set up an interval to fetch content every 5 seconds
+      const intervalId = setInterval(() => {
+        fetchContent();
+      }, 5000); // Fetch every 5 seconds
+
+      // Clean up the interval when the component unmounts
+      return () => clearInterval(intervalId);
     }
   }, [sessionId]); // Fetch content when sessionId is set
 
