@@ -31,15 +31,14 @@ const NameGenPusher = () => {
       setSessionId(existingSessionId);
       console.log('Existing session ID found:', existingSessionId);
     }
+  }, []); // Empty dependency array ensures this runs only once on mount
 
-    // Fetch content for the current session
-    fetchContent();
-
-    // Clean up function
-    return () => {
-      clearSessionData();
-    };
-  }, [sessionId]);
+  useEffect(() => {
+    // Fetch content only after the session ID is set
+    if (sessionId) {
+      fetchContent();
+    }
+  }, [sessionId]); // Fetch content when sessionId is set
 
   const fetchContent = async () => {
     try {
