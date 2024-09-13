@@ -79,4 +79,35 @@ const NameGenPusher = () => {
 
   return (
     <div className="vf-container">
-      <h```
+      <h2 id="generated-names-title">Generated Names</h2>
+      <div className="response-box" aria-labelledby="generated-names-title">
+        {filteredContent.map((section, index) => (
+          <div key={index}>
+            <h3 id={`category-${index}`}>{section.category}</h3>
+            {section.names.length > 0 ? (
+              <ul aria-labelledby={`category-${index}`}>
+                {section.names.map((name, nameIndex) => {
+                  // URL encode the name
+                  const encodedName = encodeURIComponent(name.trim());
+                  const goDaddyLink = `https://www.godaddy.com/en-in/domainsearch/find?itc=dlp_domain&domainToCheck=${encodedName}`;
+
+                  return (
+                    <li key={nameIndex} className="name-item">
+                      <a href={goDaddyLink} target="_blank" rel="noopener noreferrer" className="custom-link">
+                        {name}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p>No names available for this category</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default NameGenPusher;
