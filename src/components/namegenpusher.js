@@ -93,7 +93,7 @@ const NameGenPusher = () => {
 
                   return (
                     <li key={nameIndex} className="name-item">
-                      <a href={goDaddyLink} target="_blank" rel="noopener noreferrer" className="custom-link">
+                      <a href={goDaddyLink} rel="noopener noreferrer" className="custom-link">
                         {name}
                       </a>
                     </li>
